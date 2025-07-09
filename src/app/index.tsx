@@ -1,13 +1,18 @@
 import { View, Pressable, Text, StyleSheet } from "react-native";
+import { Link } from "expo-router";
 import { router } from "expo-router";
 
 const Home: React.FC = () => {
   const startScan = () => {
     router.push("scanner");
+
   };
 
   return (
     <View style={styles.container}>
+      <Link style={styles.button} href="/dashboard">
+        <Text style={styles.text}>Dashboard</Text>
+      </Link>
       <Pressable style={styles.button} onPress={startScan}>
         <Text style={styles.text}>Scan QR code</Text>
       </Pressable>
@@ -29,6 +34,7 @@ const styles = StyleSheet.create({
     borderRadius: 4,
     elevation: 3,
     backgroundColor: "black",
+    marginVertical: 5,
   },
   text: {
     fontSize: 16,
