@@ -1,8 +1,7 @@
 {
   "expo": {
-    "name": "expo-qr-scanner",
-    "slug": "expo-qr-scanner",
-    "scheme": "your-app-scheme",
+    "name": "kumi",
+    "slug": "kumi-attendance",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -12,19 +11,29 @@
       "resizeMode": "contain",
       "backgroundColor": "#ffffff"
     },
-    "newArchEnabled": true,
+    "newArchEnabled": false,
     "assetBundlePatterns": ["**/*"],
     "ios": {
-      "supportsTablet": true
+      "supportsTablet": true,
+      "bundleIdentifier": "com.kumonpunggolplaza.kumi"
     },
     "android": {
+      "package": "com.kumonpunggolplaza.kumi",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
-      }
+      },
+      "permissions": [
+        "android.permission.CAMERA",
+        "android.permission.RECORD_AUDIO",
+        "android.permission.MODIFY_AUDIO_SETTINGS"
+      ]
     },
     "web": {
       "favicon": "./assets/favicon.png"
+    },
+    "experiments": {
+      "reactCanary": true
     },
     "plugins": [
       "expo-router",
@@ -35,7 +44,15 @@
           "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
           "recordAudioAndroid": true
         }
-      ]
-    ]
+      ],
+      "expo-av"
+    ],
+    "extra": {
+      "EXPO_PUBLIC_API_BASE": "http://192.168.1.127:4000/",
+      "router": {},
+      "eas": {
+        "projectId": "ac98a74c-03e4-4dee-9e04-acbdf735e2a7"
+      }
+    }
   }
 }

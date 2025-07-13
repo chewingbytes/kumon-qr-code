@@ -1,3 +1,6 @@
+import Constants from "expo-constants";
+import { createAudioPlayer, useAudioPlayer } from "expo-audio";
+const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
 import { useRef } from "react";
 import { useState, useEffect } from "react";
 import { Dimensions, Alert, Vibration, TouchableOpacity } from "react-native";
@@ -10,7 +13,26 @@ import pako from "pako";
 import { Buffer } from "buffer";
 global.Buffer = global.Buffer || Buffer;
 
-import { supabase } from "../../lib/supabase";
+const audioSource = {
+  uri: "http://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a",
+};
+
+console.log("API:", API);
+const postJSON = async (path: string, body: object) => {
+  console.log("querying:", path);
+  console.log("with body:", body);
+  const res = await fetch(API + path, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(body),
+  });
+  return res.json();
+};
+
+const getJSON = async (path: string) => {
+  const res = await fetch(API + path);
+  return res.json();
+};
 
 interface QRData {
   name: string;
@@ -18,6 +40,10 @@ interface QRData {
 }
 
 const QRScanner: React.FC = () => {
+  const player = useAudioPlayer(audioSource);
+
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+
   const [hasCameraPermission, setCameraPermission] = useState<boolean | null>(
     null
   );
@@ -71,50 +97,14 @@ const QRScanner: React.FC = () => {
     }
   }, [hasCameraPermission, hasAudioPermission]);
 
-  const handleCheckOut = async (name) => {
-    try {
-      const singaporeTime = new Date().toLocaleString("en-SG", {
-        timeZone: "Asia/Singapore",
-      });
-
-      const { error } = await supabase
-        .from("students_checkin")
-        .update({ checked_out: singaporeTime })
-        .eq("name", name);
-
-      if (error) {
-        Alert.alert("Error", "Failed to check out. Please try again.");
-        console.error("Error updating data: ", error);
-      } else {
-        Alert.alert("Success", `${name} successfully checked out!`);
-        console.log(`${name} successfully checked out`);
-      }
-    } catch (error) {
-      console.error("error:", error);
-      Alert.alert("Error", "An error occurred while checking out.");
-    }
+  const handleCheckOut = async (name: string) => {
+    const { error } = await postJSON("api/db/checkout", { name });
+    if (error) Alert.alert("Error", error);
   };
 
-  const handleCheckIn = async (name, parent_number) => {
-    const singaporeTime = new Date().toLocaleString("en-SG", {
-      timeZone: "Asia/Singapore",
-    });
-
-    const { error } = await supabase.from("students_checkin").insert([
-      {
-        name: name,
-        parent_number: parent_number,
-        checked_in: singaporeTime,
-      },
-    ]);
-
-    if (error) {
-      Alert.alert("Error", "Failed to check in. Please try again.");
-      console.error("Error inserting data: ", error);
-    } else {
-      Alert.alert("Success", `${name} successfully checked in!`);
-      console.log(`${name} successfully inserted`);
-    }
+  const handleCheckIn = async (name: string) => {
+    const { error } = await postJSON("api/db/checkin", { name });
+    if (error) Alert.alert("Error", error);
   };
 
   const handleBarCodeScanned = async ({ data }) => {
@@ -125,6 +115,8 @@ const QRScanner: React.FC = () => {
         return;
       }
 
+      setScanned(true); // Prevent further scans immediately
+
       lastScannedTimeStampRef.current = timestamp;
 
       const compressedData = Buffer.from(data, "hex");
@@ -133,37 +125,45 @@ const QRScanner: React.FC = () => {
 
       console.log(parsedData);
 
-      const { name, parent_number } = parsedData;
+      const { name } = parsedData;
 
-      const { data: existingCheckin, error: fetchError } = await supabase
-        .from("students_checkin")
-        .select("*")
-        .eq("name", name)
-        .single();
+      player.seekTo(0);
+      player.play();
 
-      if (fetchError) {
-        handleCheckIn(name, parent_number);
+      setSuccessMessage(`Scanned: ${name}`);
+      setTimeout(() => setSuccessMessage(null), 5000);
+
+      const status = await getJSON(`api/db/status/${encodeURIComponent(name)}`);
+
+      console.log("STATUS:", status);
+
+      if (!status.found) {
+        return handleCheckIn(name);
       }
 
-      if (existingCheckin) {
+      if (status.record.status === "checked_out") {
         Alert.alert(
-          "Already Checked In",
-          `${name} is already checked in. Would you like to check out?`,
+          "Already Checked Out",
+          `${name} is already checked out. Check in again?`,
           [
+            { text: "Cancel", style: "cancel" },
             {
-              text: "No",
-              onPress: () => {},
-            },
-            {
-              text: "Yes",
-              onPress: async () => handleCheckOut(name),
+              text: "Check In",
+              onPress: () => handleCheckIn(name),
             },
           ]
         );
+      } else {
+        await handleCheckOut(name);
       }
     } catch (error) {
       console.error("error:", error);
       Alert.alert("Invalid QR Code", "Unable to process the QR code.");
+    } finally {
+      // Wait 2 seconds before re-enabling scanning
+      setTimeout(() => {
+        setScanned(false);
+      }, 7000);
     }
   };
 
@@ -183,6 +183,19 @@ const QRScanner: React.FC = () => {
         }}
         style={{ height: Dimensions.get("window").height }}
       >
+        {successMessage && (
+          <View style={styles.popup}>
+            <Text style={styles.popupText}>{successMessage}</Text>
+          </View>
+        )}
+
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => router.push("/")}
+        >
+          <Text style={styles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+
         <View style={styles.buttonContainer}>
           <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
             <Text style={styles.text}>Flip Camera</Text>
@@ -194,21 +207,66 @@ const QRScanner: React.FC = () => {
 };
 
 const styles = StyleSheet.create({
+  backButton: {
+    position: "absolute",
+    top: 40,
+    left: 20,
+    backgroundColor: "rgba(0, 74, 124, 0.7)", // semi-transparent deep blue
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    borderRadius: 20,
+    zIndex: 10,
+    elevation: 10,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  backButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
   buttonContainer: {
-    flex: 1,
-    flexDirection: "row",
-    backgroundColor: "transparent",
-    margin: 64,
+    position: "absolute",
+    bottom: 40,
+    width: "100%",
+    alignItems: "center",
+    justifyContent: "center",
+    paddingHorizontal: 20,
   },
   button: {
-    flex: 1,
-    alignSelf: "flex-end",
-    alignItems: "center",
+    backgroundColor: "#33C1FF", // Kumon Red
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    elevation: 5,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 4,
   },
   text: {
-    fontSize: 24,
+    fontSize: 18,
     fontWeight: "bold",
-    color: "white",
+    color: "#fff",
+    textAlign: "center",
+  },
+  popup: {
+    position: "absolute",
+    top: "70%",
+    alignSelf: "center",
+    backgroundColor: "rgba(0, 0, 0, 0.8)",
+    paddingVertical: 16,
+    paddingHorizontal: 24,
+    borderRadius: 12,
+    zIndex: 999,
+  },
+  popupText: {
+    color: "#fff",
+    fontSize: 18,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });
 

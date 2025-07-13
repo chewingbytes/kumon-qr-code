@@ -6,11 +6,18 @@ import {
   FlatList,
   Alert,
   TouchableOpacity,
+  Button,
+  SafeAreaView,
 } from "react-native";
 import { supabase } from "../../lib/supabase";
+import { router } from "expo-router";
 
 export default function Dashboard() {
   const [students, setStudents] = useState([]);
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    router.replace("/login");
+  };
 
   useEffect(() => {
     const fetchStudents = async () => {
@@ -30,36 +37,47 @@ export default function Dashboard() {
   }, []);
 
   const handleNotify = (name: any, parent_number: any) => {
-    Alert.alert("Notification", `${name}'s parent (${parent_number}) has been notified.`);
+    Alert.alert(
+      "Notification",
+      `${name}'s parent (${parent_number}) has been notified.`
+    );
   };
 
   return (
-    <View style={styles.container}>
-      <Text style={styles.title}>Today</Text>
-      <FlatList
-        data={students}
-        renderItem={({ item }) => (
-          <View style={styles.itemContainer}>
-            <Text style={styles.item}>
-              {`Name: ${item.name}\nChecked In: ${item.checked_in}\nCheckout: ${
-                item.checked_out || "Not yet"
-              }`}
-            </Text>
-            <TouchableOpacity
-              style={styles.notifyButton}
-              onPress={() => handleNotify(item.name, item.parent_number)}
-            >
-              <Text style={styles.buttonText}>Notify</Text>
-            </TouchableOpacity>
-          </View>
-        )}
-        keyExtractor={(item, index) => index.toString()}
-      />
-    </View>
+    <SafeAreaView style={styles.safeArea}>
+      <View style={styles.container}>
+        <Button title="Log out" onPress={handleLogout} />
+        <Text style={styles.title}>Today</Text>
+        <FlatList
+          data={students}
+          renderItem={({ item }) => (
+            <View style={styles.itemContainer}>
+              <Text style={styles.item}>
+                {`Name: ${item.name}\nChecked In: ${
+                  item.checked_in
+                }\nCheckout: ${item.checked_out || "Not yet"}`}
+              </Text>
+              <TouchableOpacity
+                style={styles.notifyButton}
+                onPress={() => handleNotify(item.name, item.parent_number)}
+              >
+                <Text style={styles.buttonText}>Notify</Text>
+              </TouchableOpacity>
+            </View>
+          )}
+          keyExtractor={(item, index) => index.toString()}
+        />
+      </View>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "white", // optional background color
+    paddingHorizontal: 16,
+  },
   container: {
     flex: 1,
     justifyContent: "center",
