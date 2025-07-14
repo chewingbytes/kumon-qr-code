@@ -1,30 +1,39 @@
-// ResetPasswordFormScreen.tsx
+// ForgotPasswordScreen.tsx
 import React, { useState } from "react";
 import {
   Alert,
   StyleSheet,
-  View,
   SafeAreaView,
   KeyboardAvoidingView,
   Platform,
+  View,
   Text,
 } from "react-native";
 import { TextInput, Button } from "react-native-paper";
+import * as Linking from "expo-linking";
 import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
 
-export default function ResetPasswordFormScreen() {
-  const [password, setPassword] = useState("");
+export default function ForgotPasswordScreen() {
+  const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function handleUpdate() {
-    if (!password.trim()) return Alert.alert("Error", "Enter a new password.");
+  async function sendPasswordReset() {
+    if (!email.trim()) return Alert.alert("Error", "Please enter your email.");
+
     setLoading(true);
-    const { error } = await supabase.auth.updateUser({ password });
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "kumi://auth/callback",
+    });
+
     setLoading(false);
-    if (error) Alert.alert("Update failed", error.message);
+    if (error) Alert.alert("Reset failed", error.message);
     else {
-      Alert.alert("Success", "Password has been changed.");
+      Alert.alert(
+        "Check your inbox",
+        "If that email exists, you'll get a reset link shortly."
+      );
       router.replace("/login");
     }
   }
@@ -36,24 +45,33 @@ export default function ResetPasswordFormScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.card}>
-          <Text style={styles.title}>Update Password</Text>
+          <Text style={styles.title}>Forgot Password</Text>
           <TextInput
-            label="New Password"
-            secureTextEntry
-            value={password}
-            onChangeText={setPassword}
+            label="Email"
+            placeholder="you@example.com"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
             mode="outlined"
             style={styles.input}
           />
           <Button
             mode="contained"
-            onPress={handleUpdate}
+            onPress={sendPasswordReset}
             disabled={loading}
             loading={loading}
             style={styles.primaryButton}
             labelStyle={styles.primaryButtonText}
           >
-            Set Password
+            Send Reset Link
+          </Button>
+          <Button
+            mode="text"
+            onPress={() => router.push("/login")}
+            style={styles.linkButton}
+            labelStyle={styles.linkButtonText}
+          >
+            Back to Login
           </Button>
         </View>
       </KeyboardAvoidingView>

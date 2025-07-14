@@ -42,7 +42,7 @@
       "expo-av"
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE": "http://192.168.0.203:4000/",
+      "EXPO_PUBLIC_API_BASE": "http://192.168.1.127:4000/",
       "router": {},
       "eas": {
         "projectId": "ac98a74c-03e4-4dee-9e04-acbdf735e2a7"

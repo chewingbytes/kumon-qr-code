@@ -1,4 +1,5 @@
-//http://192.168.1.127:4000
+//mac http://192.168.1.127:4000
+//http://192.168.0.203:4000/
 import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
@@ -166,7 +167,7 @@ export default function HomeScreen() {
           <View style={styles.leftGroup}>
             <Image
               source={{
-                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumi-logo.png",
+                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
               }}
               style={styles.logoIcon}
               resizeMode="contain"

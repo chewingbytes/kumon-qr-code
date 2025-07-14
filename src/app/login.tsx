@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <Image
             source={{
-              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumi-logo.png",
+              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
             }}
             style={styles.logo}
             resizeMode="contain"
@@ -100,8 +100,7 @@ export default function LoginScreen() {
           <Button
             mode="text"
             onPress={() => {
-              console.log("Navigating to /reset-password");
-              router.push("/reset-password");
+              router.push("/forgot-password");
             }}
             labelStyle={styles.secondaryButtonText}
           >
