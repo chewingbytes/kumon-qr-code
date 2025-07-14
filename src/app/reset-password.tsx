@@ -1,46 +1,42 @@
-import { useState, useEffect } from "react";
+import React, { useState } from "react";
 import {
   Alert,
   StyleSheet,
   View,
-  AppState,
-  Text,
+  SafeAreaView,
   KeyboardAvoidingView,
   Platform,
-  SafeAreaView,
+  Text,
   TouchableOpacity,
-  Image,
 } from "react-native";
 import { TextInput, Button } from "react-native-paper";
 import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
 
-AppState.addEventListener("change", (state) => {
-  if (state === "active") {
-    supabase.auth.startAutoRefresh();
-  } else {
-    supabase.auth.stopAutoRefresh();
-  }
-});
-
-export default function LoginScreen() {
+export default function ResetPasswordScreen() {
   const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
 
-  async function signInWithEmail() {
+  async function sendPasswordReset() {
+    if (!email) {
+      Alert.alert("Error", "Please enter your email address.");
+      return;
+    }
     setLoading(true);
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
+
+    const { error } = await supabase.auth.resetPasswordForEmail(email, {
+      redirectTo: "kumi://auth/callback", // your app deep link
     });
 
     if (error) {
-      Alert.alert("Login failed", error.message);
+      Alert.alert("Reset failed", error.message);
     } else {
-      router.replace("/");
+      Alert.alert(
+        "Check your inbox",
+        "If an account with that email exists, a password reset link has been sent."
+      );
+      router.replace("/login");
     }
-
     setLoading(false);
   }
 
@@ -51,15 +47,7 @@ export default function LoginScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
         <View style={styles.card}>
-          <Image
-            source={{
-              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumi-logo.png",
-            }}
-            style={styles.logo}
-            resizeMode="contain"
-          />
-          <Text style={styles.title}>Kumi</Text>
-          <Text style={styles.subtitle}>Please log in to continue</Text>
+          <Text style={styles.title}>Reset Password</Text>
           <TextInput
             label="Email"
             placeholder="you@example.com"
@@ -69,43 +57,27 @@ export default function LoginScreen() {
             mode="outlined"
             style={styles.input}
           />
-          <TextInput
-            label="Password"
-            placeholder="Password"
-            secureTextEntry
-            autoCapitalize="none"
-            value={password}
-            onChangeText={setPassword}
-            mode="outlined"
-            style={styles.input}
-          />
+
           <Button
             mode="contained"
-            onPress={signInWithEmail}
+            onPress={sendPasswordReset}
             disabled={loading}
             loading={loading}
             style={styles.primaryButton}
             labelStyle={styles.primaryButtonText}
           >
-            Log In
+            Send Reset Link
           </Button>
-          <Button
-            mode="text"
-            onPress={() => router.push("/signup")}
-            style={styles.secondaryButton}
-            labelStyle={styles.secondaryButtonText}
-          >
-            Don't have an account? Sign up
-          </Button>
+
           <Button
             mode="text"
             onPress={() => {
-              console.log("Navigating to /reset-password");
-              router.push("/reset-password");
+              router.push("/");
             }}
-            labelStyle={styles.secondaryButtonText}
+            style={styles.linkButton}
+            labelStyle={styles.linkButtonText}
           >
-            Forgot Your Password?
+            Remember Your Password?
           </Button>
         </View>
       </KeyboardAvoidingView>
@@ -114,17 +86,10 @@ export default function LoginScreen() {
 }
 
 const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: "#f0f9ff",
-  },
-  container: {
-    flex: 1,
-    justifyContent: "center",
-    paddingHorizontal: 24,
-  },
+  safeArea: { flex: 1, backgroundColor: "#f0f9ff" },
+  container: { flex: 1, justifyContent: "center", paddingHorizontal: 24 },
   card: {
-    backgroundColor: "#ffffff",
+    backgroundColor: "#fff",
     padding: 24,
     borderRadius: 12,
     borderWidth: 1,
@@ -136,20 +101,9 @@ const styles = StyleSheet.create({
     elevation: 4,
     alignItems: "center",
   },
-  logo: {
-    width: 100,
-    height: 100,
-    marginBottom: 12,
-  },
   title: {
     fontSize: 24,
     fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 4,
-    textAlign: "center",
-  },
-  subtitle: {
-    fontSize: 14,
     color: "#004A7C",
     marginBottom: 24,
     textAlign: "center",
@@ -170,10 +124,12 @@ const styles = StyleSheet.create({
     color: "#fff",
     fontWeight: "bold",
   },
-  secondaryButton: {
+  linkButton: {
     marginTop: 12,
+    alignSelf: "center", // center the button itself
   },
-  secondaryButtonText: {
+
+  linkButtonText: {
     color: "#004A7C",
     fontWeight: "bold",
   },

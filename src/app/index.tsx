@@ -1,5 +1,8 @@
+//http://192.168.1.127:4000
+import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
+console.log("API:", API);
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
@@ -14,6 +17,8 @@ import {
   Platform,
   KeyboardAvoidingView,
   TouchableOpacity,
+  Image,
+  ImageBackground
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -28,22 +33,50 @@ export default function HomeScreen() {
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState([]);
 
-  const postJSON = async (path: string, body = {}) => {
-    console.log("querying:", path);
-    console.log("with body:", body);
+  const postJSON = async (path: string, accessToken: string) => {
     const res = await fetch(API + path, {
       method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(body),
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
     });
     return res.json();
   };
 
+  const handleLogout = () => {
+    Alert.alert("Confirm Logout", "Are you sure you want to log out?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Logout",
+        style: "destructive",
+        onPress: async () => {
+          const { error } = await supabase.auth.signOut();
+          if (error) {
+            Alert.alert("Logout failed", error.message);
+          } else {
+            router.replace("/login");
+          }
+        },
+      },
+    ]);
+    setDropdownVisible(false);
+  };
+
   const fetchStudents = async () => {
     try {
-      console.log("Fetching students from API...");
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
       const res = await fetch(API + "api/db/students", {
         method: "GET",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
       });
       const json = await res.json();
       if (json.error) throw new Error(json.error);
@@ -71,9 +104,18 @@ export default function HomeScreen() {
   const submitStudents = async () => {
     if (!students.length) return Alert.alert("No students to submit");
     try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
       const res = await fetch(API + "api/db/students", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${accessToken}`,
+        },
         body: JSON.stringify({ students }),
       });
       const json = await res.json();
@@ -89,7 +131,12 @@ export default function HomeScreen() {
   };
 
   const finishDay = async () => {
-    const res = await postJSON("api/db/finish-day");
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const accessToken = session?.access_token;
+    const res = await postJSON("api/db/finish-day", accessToken);
     if (res?.error) Alert.alert("Error", res.error);
     else Alert.alert("Done", "Day finished and report sent.");
     setDropdownVisible(false);
@@ -115,9 +162,63 @@ export default function HomeScreen() {
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
       >
-        <View style={styles.content}>
-          <Text style={styles.header}>📊 Student Check-ins</Text>
+        <View style={styles.topBar}>
+          <View style={styles.leftGroup}>
+            <Image
+              source={{
+                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumi-logo.png",
+              }}
+              style={styles.logoIcon}
+              resizeMode="contain"
+            />
+            <Text style={styles.header}>Kumi</Text>
+          </View>
 
+          <TouchableOpacity
+            onPress={() => setDropdownVisible(!dropdownVisible)}
+          >
+            <Text style={styles.hamburgerIcon}>☰</Text>
+          </TouchableOpacity>
+
+          {dropdownVisible && (
+            <View style={styles.dropdownMenu}>
+              <Pressable onPress={() => router.push("/profile")}>
+                <Text style={styles.dropdownItem}>My Profile</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setModalVisible(true);
+                  setDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.dropdownItem}>Add Students</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    "Are you sure?",
+                    "This will finish the day and email the attendance Excel report.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Yes, proceed",
+                        onPress: () => finishDay(),
+                      },
+                    ]
+                  );
+                  setDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.dropdownItem}>Finish the Day</Text>
+              </Pressable>
+              <Pressable onPress={handleLogout}>
+                <Text style={styles.dropdownItem}>Logout</Text>
+              </Pressable>
+            </View>
+          )}
+        </View>
+
+        <View style={styles.content}>
           <TextInput
             placeholder="Search student..."
             value={searchQuery}
@@ -192,44 +293,6 @@ export default function HomeScreen() {
           <Pressable style={styles.primaryButton} onPress={startScan}>
             <Text style={styles.primaryButtonText}>Scan QR Code</Text>
           </Pressable>
-
-          <Pressable
-            style={styles.secondaryButton}
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-          >
-            <Text style={styles.secondaryButtonText}>More Actions ▾</Text>
-          </Pressable>
-
-          {dropdownVisible && (
-            <View style={styles.dropdown}>
-              <Pressable
-                onPress={() => {
-                  setModalVisible(true);
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>➕ Add Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    "Are you sure?",
-                    "This will finish the day and email the attendance Excel report.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Yes, proceed",
-                        onPress: () => finishDay(),
-                      },
-                    ]
-                  );
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>✅ Finish the Day</Text>
-              </Pressable>
-            </View>
-          )}
         </View>
 
         {/* Modal */}
@@ -307,7 +370,6 @@ const styles = StyleSheet.create({
   header: {
     fontSize: 24,
     fontWeight: "bold",
-    marginBottom: 20,
     color: "#004A7C",
   },
   input: {
@@ -400,14 +462,50 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff", // white background for contrast
     margin: 20, // keep it away from screen edges
   },
-
   dashboardListContainer: {
     flex: 1, // Makes list fill remaining space
   },
-
   footer: {
     paddingBottom: 20,
     paddingHorizontal: 20,
     backgroundColor: "#f0f9ff",
+  },
+  topBar: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    paddingHorizontal: 20,
+    paddingTop: 10,
+  },
+  logoIcon: {
+    width: 35,
+    height: 35,
+  },
+
+  hamburgerIcon: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#004A7C",
+  },
+
+  dropdownMenu: {
+    position: "absolute",
+    top: 50,
+    right: 30,
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    elevation: 5,
+    paddingVertical: 10,
+    paddingHorizontal: 15,
+    zIndex: 999,
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 5,
+  },
+  leftGroup: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 10, // if not supported, use marginRight on logo
   },
 });

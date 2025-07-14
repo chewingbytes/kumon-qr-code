@@ -1,5 +1,15 @@
 import { useState } from "react";
-import { Alert, StyleSheet, View, AppState } from "react-native";
+import {
+  Alert,
+  StyleSheet,
+  View,
+  AppState,
+  Text,
+  SafeAreaView,
+  KeyboardAvoidingView,
+  Platform,
+  Image,
+} from "react-native";
 import { TextInput, Button } from "react-native-paper";
 import { supabase } from "../../lib/supabase";
 import { router } from "expo-router";
@@ -26,6 +36,9 @@ export default function SignupScreen() {
     } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        emailRedirectTo: "kumi://auth/callback",
+      },
     });
 
     if (error) {
@@ -41,52 +54,132 @@ export default function SignupScreen() {
   }
 
   return (
-    <View style={styles.container}>
-      <TextInput
-        label="Email"
-        placeholder="you@example.com"
-        autoCapitalize="none"
-        value={email}
-        onChangeText={setEmail}
-        style={styles.input}
-      />
-      <TextInput
-        label="Password"
-        placeholder="Password"
-        secureTextEntry
-        autoCapitalize="none"
-        value={password}
-        onChangeText={setPassword}
-        style={styles.input}
-      />
-      <Button
-        mode="contained"
-        onPress={signUpWithEmail}
-        disabled={loading}
-        loading={loading}
-        style={styles.button}
+    <SafeAreaView style={styles.safeArea}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === "ios" ? "padding" : undefined}
       >
-        Sign up
-      </Button>
-      <Button
-        mode="text"
-        onPress={() => router.push("/login")}
-      >
-        Already have an account? Log in
-      </Button>
-    </View>
+        <View style={styles.card}>
+          <Image
+            source={{
+              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumi-logo.png",
+            }}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+          <Text style={styles.title}>Create a Kumi Account</Text>
+          <Text style={styles.subtitle}>
+            Sign up to start managing attendance
+          </Text>
+
+          <TextInput
+            label="Email"
+            placeholder="you@example.com"
+            autoCapitalize="none"
+            value={email}
+            onChangeText={setEmail}
+            mode="outlined"
+            style={styles.input}
+          />
+
+          <TextInput
+            label="Password"
+            placeholder="Password"
+            secureTextEntry
+            autoCapitalize="none"
+            value={password}
+            onChangeText={setPassword}
+            mode="outlined"
+            style={styles.input}
+          />
+
+          <Button
+            mode="contained"
+            onPress={signUpWithEmail}
+            disabled={loading}
+            loading={loading}
+            style={styles.primaryButton}
+            labelStyle={styles.primaryButtonText}
+          >
+            Sign Up
+          </Button>
+
+          <Button
+            mode="text"
+            onPress={() => router.push("/login")}
+            style={styles.secondaryButton}
+            labelStyle={styles.secondaryButtonText}
+          >
+            Already have an account? Log in
+          </Button>
+        </View>
+      </KeyboardAvoidingView>
+    </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
+  safeArea: {
+    flex: 1,
+    backgroundColor: "#f0f9ff",
+  },
   container: {
-    padding: 20,
-    marginTop: 40,
+    flex: 1,
+    justifyContent: "center",
+    paddingHorizontal: 24,
+  },
+  card: {
+    backgroundColor: "#ffffff",
+    padding: 24,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: "#004A7C",
+    shadowColor: "#000",
+    shadowOpacity: 0.1,
+    shadowOffset: { width: 0, height: 2 },
+    shadowRadius: 4,
+    elevation: 4,
+    alignItems: "center",
+  },
+  title: {
+    fontSize: 24,
+    fontWeight: "bold",
+    color: "#004A7C",
+    marginBottom: 8,
+    textAlign: "center",
+  },
+  subtitle: {
+    fontSize: 14,
+    color: "#004A7C",
+    marginBottom: 24,
+    textAlign: "center",
   },
   input: {
+    backgroundColor: "#fff",
     marginBottom: 16,
+    alignSelf: "stretch",
   },
-  button: {
-    marginBottom: 16,
+  primaryButton: {
+    backgroundColor: "#004A7C",
+    paddingVertical: 10,
+    borderRadius: 8,
+    marginTop: 8,
+    alignSelf: "stretch",
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+  },
+  secondaryButton: {
+    marginTop: 12,
+  },
+  secondaryButtonText: {
+    color: "#004A7C",
+    fontWeight: "bold",
+  },
+  logo: {
+    width: 100,
+    height: 100,
+    marginBottom: 12,
   },
 });

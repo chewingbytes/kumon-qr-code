@@ -34,7 +34,7 @@ export default function Layout() {
   useEffect(() => {
     if (session === undefined) return; // wait for session check
 
-    const inAuthGroup = segments[0] === "login" || segments[0] === "signup";
+    const inAuthGroup = segments[0] === "login" || segments[0] === "signup" || segments[0] === "reset-password";
 
     if (!session && !inAuthGroup) {
       // Not logged in, redirect to login

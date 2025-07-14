@@ -12,25 +12,34 @@ import { StyleSheet, Text, View } from "react-native";
 import pako from "pako";
 import { Buffer } from "buffer";
 global.Buffer = global.Buffer || Buffer;
+import { supabase } from "../../lib/supabase";
 
 const audioSource = {
   uri: "http://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a",
 };
 
 console.log("API:", API);
-const postJSON = async (path: string, body: object) => {
+const postJSON = async (path: string, body: object, accessToken: string) => {
   console.log("querying:", path);
   console.log("with body:", body);
   const res = await fetch(API + path, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
     body: JSON.stringify(body),
   });
   return res.json();
 };
 
-const getJSON = async (path: string) => {
-  const res = await fetch(API + path);
+const getJSON = async (path: string, accessToken: string) => {
+  const res = await fetch(API + path, {
+    headers: {
+      "Content-Type": "application/json",
+      Authorization: `Bearer ${accessToken}`,
+    },
+  });
   return res.json();
 };
 
@@ -98,12 +107,24 @@ const QRScanner: React.FC = () => {
   }, [hasCameraPermission, hasAudioPermission]);
 
   const handleCheckOut = async (name: string) => {
-    const { error } = await postJSON("api/db/checkout", { name });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const accessToken = session?.access_token;
+
+    const { error } = await postJSON("api/db/checkout", { name }, accessToken);
     if (error) Alert.alert("Error", error);
   };
 
   const handleCheckIn = async (name: string) => {
-    const { error } = await postJSON("api/db/checkin", { name });
+    const {
+      data: { session },
+    } = await supabase.auth.getSession();
+
+    const accessToken = session?.access_token;
+
+    const { error } = await postJSON("api/db/checkin", { name }, accessToken);
     if (error) Alert.alert("Error", error);
   };
 
@@ -133,7 +154,16 @@ const QRScanner: React.FC = () => {
       setSuccessMessage(`Scanned: ${name}`);
       setTimeout(() => setSuccessMessage(null), 5000);
 
-      const status = await getJSON(`api/db/status/${encodeURIComponent(name)}`);
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      const status = await getJSON(
+        `api/db/status/${encodeURIComponent(name)}`,
+        accessToken
+      );
 
       console.log("STATUS:", status);
 
