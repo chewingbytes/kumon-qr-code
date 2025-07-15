@@ -8,6 +8,7 @@ import {
   ScrollView,
   Alert,
   Pressable,
+  TouchableOpacity,
 } from "react-native";
 import { supabase } from "../../lib/supabase";
 import { Button } from "react-native-paper";
@@ -53,7 +54,7 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={localStyles.safeArea}>
+      <SafeAreaView style={localStyles.loadingSafeArea}>
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
@@ -61,54 +62,58 @@ export default function ProfileScreen() {
 
   return (
     <SafeAreaView style={localStyles.safeArea}>
-      <ScrollView contentContainerStyle={localStyles.container}>
-        <View style={localStyles.card}>
-          <Text style={localStyles.title}>My Profile</Text>
+      <View style={localStyles.container}>
+        <TouchableOpacity
+          style={localStyles.backButton}
+          onPress={() => router.push("/")}
+        >
+          <Text style={localStyles.backButtonText}>← Back</Text>
+        </TouchableOpacity>
+        <View>
+          <View style={localStyles.card}>
+            <Text style={localStyles.title}>My Profile</Text>
 
-          <View style={localStyles.infoGroup}>
-            <Text style={localStyles.label}>Email</Text>
-            <Text style={localStyles.value}>{user.email}</Text>
+            <View style={localStyles.infoGroup}>
+              <Text style={localStyles.label}>Email</Text>
+              <Text style={localStyles.value}>{user.email}</Text>
+            </View>
+
+            <View style={localStyles.infoGroup}>
+              <Text style={localStyles.label}>User ID</Text>
+              <Text style={localStyles.value}>{user.id}</Text>
+            </View>
+
+            <View style={localStyles.infoGroup}>
+              <Text style={localStyles.label}>Created At</Text>
+              <Text style={localStyles.value}>
+                {new Date(user.created_at).toLocaleString()}
+              </Text>
+            </View>
+
+            <Pressable onPress={() => handleLogout()}>
+              <Text style={localStyles.dropdownItem}>Log out</Text>
+            </Pressable>
           </View>
-
-          <View style={localStyles.infoGroup}>
-            <Text style={localStyles.label}>User ID</Text>
-            <Text style={localStyles.value}>{user.id}</Text>
-          </View>
-
-          <View style={localStyles.infoGroup}>
-            <Text style={localStyles.label}>Created At</Text>
-            <Text style={localStyles.value}>
-              {new Date(user.created_at).toLocaleString()}
-            </Text>
-          </View>
-
-          <Button
-            mode="contained"
-            onPress={() => router.push("/")}
-            style={localStyles.primaryButton}
-            labelStyle={localStyles.primaryButtonText}
-          >
-            Back to Home
-          </Button>
-          <Pressable onPress={() => handleLogout()}>
-            <Text style={localStyles.dropdownItem}>Log out</Text>
-          </Pressable>
         </View>
-      </ScrollView>
+      </View>
     </SafeAreaView>
   );
 }
 
 const localStyles = StyleSheet.create({
+  loadingSafeArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
+  },
   safeArea: {
     flex: 1,
-    justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#f0f9ff"
   },
   container: {
+    flex: 1,
     padding: 20,
-    justifyContent: "center",
   },
   card: {
     backgroundColor: "#ffffff",
@@ -158,6 +163,25 @@ const localStyles = StyleSheet.create({
     paddingVertical: 20,
     fontSize: 16,
     color: "#004A7C",
-    textAlign: "center"
+    textAlign: "center",
+  },
+  backButton: {
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#004A7C",
+    elevation: 4,
+    alignSelf: "flex-start",
+    backgroundColor: "#FFFFFF",
+    paddingVertical: 8,
+    paddingHorizontal: 14,
+    marginBottom: 20, // space below the button so card is pushed down
+  },
+  backButtonText: {
+    color: "#004A7C",
+    fontSize: 16,
+    fontWeight: "bold",
+  },
+  buttoncontainer: {
+    padding: 20,
   },
 });

@@ -1,5 +1,6 @@
 //mac http://192.168.1.127:4000
 //http://192.168.0.203:4000/
+import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
@@ -19,7 +20,8 @@ import {
   KeyboardAvoidingView,
   TouchableOpacity,
   Image,
-  ImageBackground
+  ImageBackground,
+  ActivityIndicator,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -33,6 +35,80 @@ export default function HomeScreen() {
   const [studentsDashboard, setStudentsDashboard] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState([]);
+  const [uploading, setUploading] = useState(false);
+  const [pickedCSV, setPickedCSV] = useState(null);
+  const [csvFileName, setCsvFileName] = useState(null);
+
+  const handlePickCSV = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: Platform.OS === "android" ? "*/*" : "text/csv",
+        copyToCacheDirectory: true,
+      });
+
+      if (
+        result.canceled === false &&
+        result.assets &&
+        result.assets.length > 0
+      ) {
+        const fileAsset = result.assets[0];
+
+        const file = {
+          uri: fileAsset.uri,
+          name: fileAsset.name,
+          type: fileAsset.mimeType || "text/csv",
+        };
+
+        setPickedCSV(file); // Set your local file state
+        setCsvFileName(file.name); // Optional: for display
+      }
+    } catch (err) {
+      Alert.alert("Pick Error", err.message);
+    }
+  };
+
+  const uploadPickedCSV = async () => {
+    if (!pickedCSV)
+      return Alert.alert("No file", "Please pick a CSV file first.");
+
+    setUploading(true);
+
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      const formData = new FormData();
+      // @ts-ignore
+      formData.append("file", pickedCSV);
+
+      const response = await fetch(API + "api/db/upload-csv", {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${accessToken}`,
+        },
+        body: formData,
+      });
+
+      const json = await response.json();
+      setUploading(false);
+      setPickedCSV(null);
+      setCsvFileName(null);
+
+      if (json.error) {
+        Alert.alert("Upload Error", json.error);
+      } else {
+        Alert.alert("Success", "CSV uploaded and processed!");
+        fetchStudents();
+        setModalVisible(false);
+      }
+    } catch (err) {
+      setUploading(false);
+      Alert.alert("Error", err.message);
+    }
+  };
 
   const postJSON = async (path: string, accessToken: string) => {
     const res = await fetch(API + path, {
@@ -43,25 +119,6 @@ export default function HomeScreen() {
       },
     });
     return res.json();
-  };
-
-  const handleLogout = () => {
-    Alert.alert("Confirm Logout", "Are you sure you want to log out?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Logout",
-        style: "destructive",
-        onPress: async () => {
-          const { error } = await supabase.auth.signOut();
-          if (error) {
-            Alert.alert("Logout failed", error.message);
-          } else {
-            router.replace("/login");
-          }
-        },
-      },
-    ]);
-    setDropdownVisible(false);
   };
 
   const fetchStudents = async () => {
@@ -164,59 +221,61 @@ export default function HomeScreen() {
         style={styles.container}
       >
         <View style={styles.topBar}>
-          <View style={styles.leftGroup}>
-            <Image
-              source={{
-                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
-              }}
-              style={styles.logoIcon}
-              resizeMode="contain"
-            />
-            <Text style={styles.header}>Kumi</Text>
-          </View>
-
-          <TouchableOpacity
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-          >
-            <Text style={styles.hamburgerIcon}>☰</Text>
-          </TouchableOpacity>
-
-          {dropdownVisible && (
-            <View style={styles.dropdownMenu}>
-              <Pressable onPress={() => router.push("/profile")}>
-                <Text style={styles.dropdownItem}>My Profile</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setModalVisible(true);
-                  setDropdownVisible(false);
+          <View style={styles.barContainer}>
+            <View style={styles.leftGroup}>
+              <Image
+                source={{
+                  uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
                 }}
-              >
-                <Text style={styles.dropdownItem}>Add Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    "Are you sure?",
-                    "This will finish the day and email the attendance Excel report.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Yes, proceed",
-                        onPress: () => finishDay(),
-                      },
-                    ]
-                  );
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Finish the Day</Text>
-              </Pressable>
-              <Pressable onPress={handleLogout}>
-                <Text style={styles.dropdownItem}>Logout</Text>
-              </Pressable>
+                style={styles.logoIcon}
+                resizeMode="contain"
+              />
+              <Text style={styles.header}>Kumi</Text>
             </View>
-          )}
+
+            <TouchableOpacity
+              onPress={() => setDropdownVisible(!dropdownVisible)}
+            >
+              <Text style={styles.hamburgerIcon}>☰</Text>
+            </TouchableOpacity>
+
+            {dropdownVisible && (
+              <View style={styles.dropdownMenu}>
+                <Pressable onPress={() => router.push("/profile")}>
+                  <Text style={styles.dropdownItem}>My Profile</Text>
+                </Pressable>
+                <Pressable onPress={() => router.push("/my-students")}>
+                  <Text style={styles.dropdownItem}>My Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setModalVisible(true);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Add Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    Alert.alert(
+                      "Are you sure?",
+                      "This will finish the day and email the attendance Excel report.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Yes, proceed",
+                          onPress: () => finishDay(),
+                        },
+                      ]
+                    );
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Finish the Day</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
         </View>
 
         <View style={styles.content}>
@@ -233,59 +292,65 @@ export default function HomeScreen() {
               ref={dashboardScrollRef}
               contentContainerStyle={{ paddingBottom: 20 }}
             >
-              {studentsDashboard
-                .filter((e) =>
-                  e.student_name
-                    ?.toLowerCase()
-                    .includes(searchQuery.toLowerCase())
-                )
-                .map((entry, idx) => {
-                  const isCheckedIn = entry.status === "checked_in";
-                  return (
-                    <View
-                      key={idx}
-                      style={[
-                        styles.card,
-                        isCheckedIn ? styles.in : styles.out,
-                      ]}
-                    >
-                      <Text style={styles.cardTitle}>
-                        🧒 {entry.student_name || entry.students?.name}
-                      </Text>
-                      <Text style={styles.cardDetail}>
-                        Date:{" "}
-                        {new Date(entry.checkin_time).toLocaleDateString(
-                          "en-SG"
-                        )}
-                      </Text>
-                      <Text style={styles.cardDetail}>
-                        Check In:{" "}
-                        {new Date(entry.checkin_time).toLocaleTimeString(
-                          "en-SG"
-                        )}
-                      </Text>
-                      {entry.checkout_time && (
+              {studentsDashboard && studentsDashboard.length > 0 ? (
+                studentsDashboard
+                  .filter((e) =>
+                    e.student_name
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((entry, idx) => {
+                    const isCheckedIn = entry.status === "checked_in";
+                    return (
+                      <View
+                        key={idx}
+                        style={[
+                          styles.card,
+                          isCheckedIn ? styles.in : styles.out,
+                        ]}
+                      >
+                        <Text style={styles.cardTitle}>
+                          🧒 {entry.student_name || entry.students?.name}
+                        </Text>
                         <Text style={styles.cardDetail}>
-                          Check Out:{" "}
-                          {new Date(entry.checkout_time).toLocaleTimeString(
+                          Date:{" "}
+                          {new Date(entry.checkin_time).toLocaleDateString(
                             "en-SG"
                           )}
                         </Text>
-                      )}
-                      <Text style={styles.cardDetail}>
-                        📩 Parent Notified:{" "}
-                        <Text
-                          style={{
-                            fontWeight: "bold",
-                            color: entry.parent_notified ? "green" : "red",
-                          }}
-                        >
-                          {entry.parent_notified ? "Yes" : "No"}
+                        <Text style={styles.cardDetail}>
+                          Check In:{" "}
+                          {new Date(entry.checkin_time).toLocaleTimeString(
+                            "en-SG"
+                          )}
                         </Text>
-                      </Text>
-                    </View>
-                  );
-                })}
+                        {entry.checkout_time && (
+                          <Text style={styles.cardDetail}>
+                            Check Out:{" "}
+                            {new Date(entry.checkout_time).toLocaleTimeString(
+                              "en-SG"
+                            )}
+                          </Text>
+                        )}
+                        <Text style={styles.cardDetail}>
+                          📩 Parent Notified:{" "}
+                          <Text
+                            style={{
+                              fontWeight: "bold",
+                              color: entry.parent_notified ? "green" : "red",
+                            }}
+                          >
+                            {entry.parent_notified ? "Yes" : "No"}
+                          </Text>
+                        </Text>
+                      </View>
+                    );
+                  })
+              ) : (
+                <SafeAreaView style={styles.loadingSafeArea}>
+                  <ActivityIndicator size="large" color="#004A7C" />
+                </SafeAreaView>
+              )}
             </ScrollView>
           </View>
         </View>
@@ -338,9 +403,15 @@ export default function HomeScreen() {
 
               {students.length > 0 &&
                 students.map((s, i) => (
-                  <Text key={i} style={styles.studentPreview}>
-                    {s.name} - {s.parent}
-                  </Text>
+                  <View key={i} style={styles.studentItem}>
+                    <Text style={styles.studentName}>{s.name}</Text>
+                    <Text style={styles.studentParentLabel}>
+                      Parent: {s.parent}
+                    </Text>
+                    <Text style={styles.studentParentLabel}>
+                      Email: {s.parentEmail}
+                    </Text>
+                  </View>
                 ))}
 
               <View style={{ flexDirection: "row", marginTop: 20 }}>
@@ -357,6 +428,19 @@ export default function HomeScreen() {
                   <Text style={styles.secondaryButtonText}>Cancel</Text>
                 </Pressable>
               </View>
+              <Pressable
+                style={[styles.primaryButton, { marginTop: 10 }]}
+                onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
+                disabled={uploading}
+              >
+                <Text style={styles.primaryButtonText}>
+                  {uploading
+                    ? "Uploading..."
+                    : pickedCSV
+                    ? `Upload: ${csvFileName}`
+                    : "Import CSV"}
+                </Text>
+              </Pressable>
             </ScrollView>
           </SafeAreaView>
         </Modal>
@@ -421,7 +505,15 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: "#004A7C",
   },
-  modalContainer: { flex: 1, backgroundColor: "#f0f9ff" },
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    padding: 20,
+    borderWidth: 2,
+    borderColor: "#004A7C",
+    elevation: 4,
+  },
   modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
@@ -478,6 +570,19 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
     paddingTop: 10,
   },
+  barContainer: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    paddingHorizontal: 20,
+    paddingVertical: 10,
+    borderWidth: 2,
+    borderColor: "#004A7C",
+    elevation: 4,
+    width: "100%",
+  },
   logoIcon: {
     width: 35,
     height: 35,
@@ -493,8 +598,10 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 50,
     right: 30,
-    backgroundColor: "#fff",
-    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: "#004A7C",
     elevation: 5,
     paddingVertical: 10,
     paddingHorizontal: 15,
@@ -508,5 +615,39 @@ const styles = StyleSheet.create({
     flexDirection: "row",
     alignItems: "center",
     gap: 10, // if not supported, use marginRight on logo
+  },
+  studentItem: {
+    marginBottom: 16,
+    padding: 14,
+    borderRadius: 10,
+    backgroundColor: "#ffffff",
+    borderWidth: 1,
+    borderColor: "#ccc",
+    elevation: 2,
+  },
+
+  studentName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#004A7C",
+    marginBottom: 4,
+  },
+
+  studentParentLabel: {
+    fontSize: 14,
+    fontWeight: "600",
+    color: "#555",
+    marginTop: 4,
+  },
+
+  studentParent: {
+    fontSize: 16,
+    color: "#333",
+    marginTop: 2,
+  },
+  loadingSafeArea: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
 });
