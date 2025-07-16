@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   ScrollView,
   TextInput,
@@ -55,7 +55,7 @@ export default function MyStudentsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loading}>
+      <SafeAreaView style={styles.loading} edges={['top', 'bottom', 'left', 'right']}>
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
@@ -63,7 +63,7 @@ export default function MyStudentsScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.backButton}

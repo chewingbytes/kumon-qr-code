@@ -4,7 +4,6 @@ import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
-console.log("API:", API);
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
@@ -14,7 +13,6 @@ import {
   Modal,
   TextInput,
   Alert,
-  SafeAreaView,
   ScrollView,
   Platform,
   KeyboardAvoidingView,
@@ -25,6 +23,7 @@ import {
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function HomeScreen() {
   const [modalVisible, setModalVisible] = useState(false);
@@ -215,7 +214,7 @@ export default function HomeScreen() {
   }, [studentsDashboard]);
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <KeyboardAvoidingView
         behavior={Platform.OS === "ios" ? "padding" : undefined}
         style={styles.container}
@@ -238,43 +237,6 @@ export default function HomeScreen() {
             >
               <Text style={styles.hamburgerIcon}>☰</Text>
             </TouchableOpacity>
-
-            {dropdownVisible && (
-              <View style={styles.dropdownMenu}>
-                <Pressable onPress={() => router.push("/profile")}>
-                  <Text style={styles.dropdownItem}>My Profile</Text>
-                </Pressable>
-                <Pressable onPress={() => router.push("/my-students")}>
-                  <Text style={styles.dropdownItem}>My Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setModalVisible(true);
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Add Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    Alert.alert(
-                      "Are you sure?",
-                      "This will finish the day and email the attendance Excel report.",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Yes, proceed",
-                          onPress: () => finishDay(),
-                        },
-                      ]
-                    );
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Finish the Day</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         </View>
 
@@ -444,6 +406,43 @@ export default function HomeScreen() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
+
+        {dropdownVisible && (
+          <View style={styles.dropdownMenu}>
+            <Pressable onPress={() => router.push("/profile")}>
+              <Text style={styles.dropdownItem}>My Profile</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/my-students")}>
+              <Text style={styles.dropdownItem}>My Students</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setModalVisible(true);
+                setDropdownVisible(false);
+              }}
+            >
+              <Text style={styles.dropdownItem}>Add Students</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Alert.alert(
+                  "Are you sure?",
+                  "This will finish the day and email the attendance Excel report.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Yes, proceed",
+                      onPress: () => finishDay(),
+                    },
+                  ]
+                );
+                setDropdownVisible(false);
+              }}
+            >
+              <Text style={styles.dropdownItem}>Finish the Day</Text>
+            </Pressable>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );

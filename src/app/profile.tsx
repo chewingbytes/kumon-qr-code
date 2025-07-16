@@ -3,13 +3,13 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   ScrollView,
   Alert,
   Pressable,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
 import { Button } from "react-native-paper";
 import { router } from "expo-router";
@@ -54,14 +54,14 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={localStyles.loadingSafeArea}>
+      <SafeAreaView style={localStyles.loadingSafeArea} edges={['top', 'bottom', 'left', 'right']}>
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={localStyles.safeArea}>
+    <SafeAreaView style={localStyles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
       <View style={localStyles.container}>
         <TouchableOpacity
           style={localStyles.backButton}
@@ -109,7 +109,7 @@ const localStyles = StyleSheet.create({
   safeArea: {
     flex: 1,
     alignItems: "center",
-    backgroundColor: "#f0f9ff"
+    backgroundColor: "#f0f9ff",
   },
   container: {
     flex: 1,
