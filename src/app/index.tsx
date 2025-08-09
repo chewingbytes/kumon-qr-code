@@ -238,43 +238,6 @@ export default function HomeScreen() {
             >
               <Text style={styles.hamburgerIcon}>☰</Text>
             </TouchableOpacity>
-
-            {dropdownVisible && (
-              <View style={styles.dropdownMenu}>
-                <Pressable onPress={() => router.push("/profile")}>
-                  <Text style={styles.dropdownItem}>My Profile</Text>
-                </Pressable>
-                <Pressable onPress={() => router.push("/my-students")}>
-                  <Text style={styles.dropdownItem}>My Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setModalVisible(true);
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Add Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    Alert.alert(
-                      "Are you sure?",
-                      "This will finish the day and email the attendance Excel report.",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Yes, proceed",
-                          onPress: () => finishDay(),
-                        },
-                      ]
-                    );
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Finish the Day</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         </View>
 
@@ -444,6 +407,42 @@ export default function HomeScreen() {
             </ScrollView>
           </SafeAreaView>
         </Modal>
+        {dropdownVisible && (
+          <View style={styles.dropdownMenu}>
+            <Pressable onPress={() => router.push("/profile")}>
+              <Text style={styles.dropdownItem}>My Profile</Text>
+            </Pressable>
+            <Pressable onPress={() => router.push("/my-students")}>
+              <Text style={styles.dropdownItem}>My Students</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                setModalVisible(true);
+                setDropdownVisible(false);
+              }}
+            >
+              <Text style={styles.dropdownItem}>Add Students</Text>
+            </Pressable>
+            <Pressable
+              onPress={() => {
+                Alert.alert(
+                  "Are you sure?",
+                  "This will finish the day and email the attendance Excel report.",
+                  [
+                    { text: "Cancel", style: "cancel" },
+                    {
+                      text: "Yes, proceed",
+                      onPress: () => finishDay(),
+                    },
+                  ]
+                );
+                setDropdownVisible(false);
+              }}
+            >
+              <Text style={styles.dropdownItem}>Finish the Day</Text>
+            </Pressable>
+          </View>
+        )}
       </KeyboardAvoidingView>
     </SafeAreaView>
   );
@@ -571,6 +570,7 @@ const styles = StyleSheet.create({
     paddingTop: 10,
   },
   barContainer: {
+    position: "relative",
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
@@ -602,7 +602,7 @@ const styles = StyleSheet.create({
     borderRadius: 12,
     borderWidth: 2,
     borderColor: "#004A7C",
-    elevation: 5,
+    elevation: 20,
     paddingVertical: 10,
     paddingHorizontal: 15,
     zIndex: 999,
