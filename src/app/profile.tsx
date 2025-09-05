@@ -11,7 +11,6 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
-import { Button } from "react-native-paper";
 import { router } from "expo-router";
 
 export default function ProfileScreen() {
@@ -54,61 +53,60 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={localStyles.loadingSafeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <SafeAreaView style={styles.loadingSafeArea} edges={['top', 'bottom', 'left', 'right']}>
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={localStyles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
-      <View style={localStyles.container}>
+    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <ScrollView contentContainerStyle={styles.container}>
         <TouchableOpacity
-          style={localStyles.backButton}
+          style={styles.backButton}
           onPress={() => router.push("/")}
         >
-          <Text style={localStyles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
-        <View>
-          <View style={localStyles.card}>
-            <Text style={localStyles.title}>My Profile</Text>
 
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>Email</Text>
-              <Text style={localStyles.value}>{user.email}</Text>
-            </View>
+        <View style={styles.card}>
+          <Text style={styles.title}>My Profile</Text>
 
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>User ID</Text>
-              <Text style={localStyles.value}>{user.id}</Text>
-            </View>
-
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>Created At</Text>
-              <Text style={localStyles.value}>
-                {new Date(user.created_at).toLocaleString()}
-              </Text>
-            </View>
-
-            <Pressable onPress={() => handleLogout()}>
-              <Text style={localStyles.dropdownItem}>Log out</Text>
-            </Pressable>
+          <View style={styles.infoGroup}>
+            <Text style={styles.label}>Email</Text>
+            <Text style={styles.value}>{user.email}</Text>
           </View>
+
+          <View style={styles.infoGroup}>
+            <Text style={styles.label}>User ID</Text>
+            <Text style={styles.value}>{user.id}</Text>
+          </View>
+
+          <View style={styles.infoGroup}>
+            <Text style={styles.label}>Created At</Text>
+            <Text style={styles.value}>
+              {new Date(user.created_at).toLocaleString()}
+            </Text>
+          </View>
+
+          <Pressable onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const localStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   loadingSafeArea: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#f0f9ff",
   },
   safeArea: {
     flex: 1,
-    alignItems: "center",
     backgroundColor: "#f0f9ff",
   },
   container: {
@@ -116,72 +114,69 @@ const localStyles = StyleSheet.create({
     padding: 20,
   },
   card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
+    width: "100%",
+    backgroundColor: "#fff",
+    borderRadius: 16,
+    padding: 30,
     borderWidth: 2,
     borderColor: "#004A7C",
-    elevation: 4,
+    elevation: 6,
+    alignItems: "flex-start",
   },
   title: {
-    fontSize: 24,
+    fontSize: 32,
     fontWeight: "bold",
     color: "#004A7C",
-    marginBottom: 20,
-    textAlign: "center",
+    marginBottom: 30,
+    alignSelf: "center",
   },
   infoGroup: {
-    marginBottom: 16,
+    marginBottom: 24,
+    width: "100%",
   },
   label: {
-    fontSize: 14,
+    fontSize: 22,
     fontWeight: "bold",
     color: "#004A7C",
-    marginBottom: 4,
+    marginBottom: 8,
   },
   value: {
-    fontSize: 16,
+    fontSize: 22,
     color: "#333",
-    backgroundColor: "#fff",
-    padding: 10,
+    backgroundColor: "#f9f9f9",
+    padding: 16,
     borderWidth: 1,
     borderColor: "#ccc",
-    borderRadius: 8,
-  },
-  primaryButton: {
-    backgroundColor: "#004A7C",
-    padding: 14,
     borderRadius: 10,
-    marginTop: 20,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  dropdownItem: {
-    paddingVertical: 20,
-    fontSize: 16,
-    color: "#004A7C",
-    textAlign: "center",
   },
   backButton: {
-    borderRadius: 12,
+    borderRadius: 14,
     borderWidth: 2,
     borderColor: "#004A7C",
-    elevation: 4,
+    backgroundColor: "#ffffff",
+    paddingVertical: 12,
+    paddingHorizontal: 20,
+    marginBottom: 30,
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginBottom: 20, // space below the button so card is pushed down
+    elevation: 4,
   },
   backButtonText: {
     color: "#004A7C",
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: "bold",
   },
-  buttoncontainer: {
-    padding: 20,
+  logoutButton: {
+    backgroundColor: "#FF6B6B",
+    paddingVertical: 16,
+    paddingHorizontal: 20,
+    borderRadius: 12,
+    marginTop: 10,
+    alignSelf: "center",
+  },
+  logoutText: {
+    color: "#fff",
+    fontSize: 22,
+    fontWeight: "bold",
+    textAlign: "center",
   },
 });

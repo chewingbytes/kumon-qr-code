@@ -107,6 +107,7 @@ const QRScanner: React.FC = () => {
   }, [hasCameraPermission, hasAudioPermission]);
 
   const handleCheckOut = async (name: string) => {
+    router.push("/"); // ✅ Redirect after check-out
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -118,6 +119,7 @@ const QRScanner: React.FC = () => {
   };
 
   const handleCheckIn = async (name: string) => {
+    router.push("/");
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -140,13 +142,7 @@ const QRScanner: React.FC = () => {
 
       lastScannedTimeStampRef.current = timestamp;
 
-      const compressedData = Buffer.from(data, "hex");
-      const decompressedData = pako.inflate(compressedData, { to: "string" });
-      const parsedData = JSON.parse(decompressedData);
-
-      console.log(parsedData);
-
-      const { name } = parsedData;
+      const name = data.trim();
 
       player.seekTo(0);
       player.play();
@@ -179,7 +175,9 @@ const QRScanner: React.FC = () => {
             { text: "Cancel", style: "cancel" },
             {
               text: "Check In",
-              onPress: () => handleCheckIn(name),
+              onPress: async () => {
+                await handleCheckIn(name);
+              },
             },
           ]
         );
@@ -223,7 +221,7 @@ const QRScanner: React.FC = () => {
           style={styles.backButton}
           onPress={() => router.push("/")}
         >
-          <Text style={styles.backButtonText}>← Back</Text>
+          <Text style={styles.backButtonText}>Back</Text>
         </TouchableOpacity>
 
         <View style={styles.buttonContainer}>
@@ -242,8 +240,8 @@ const styles = StyleSheet.create({
     top: 40,
     left: 20,
     backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 12,
+    paddingHorizontal: 20,
     borderRadius: 12,
     borderWidth: 2,
     zIndex: 10,
@@ -255,7 +253,7 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     color: "#004A7C",
-    fontSize: 16,
+    fontSize: 22,
     fontWeight: "bold",
   },
   buttonContainer: {
@@ -272,10 +270,6 @@ const styles = StyleSheet.create({
     paddingHorizontal: 32,
     borderRadius: 30,
     elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   text: {
     fontSize: 18,

@@ -4,7 +4,6 @@
     "slug": "kumi-attendance",
     "scheme": "kumi",
     "version": "1.0.0",
-    "orientation": "portrait",
     "icon": "./assets/kumi-logo.png",
     "userInterfaceStyle": "light",
     "splash": {
@@ -39,7 +38,22 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ],
-      "expo-av"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ],
+      "expo-av",
+      "expo-build-properties"
     ],
     "extra": {
       "EXPO_PUBLIC_API_BASE": "http://46.62.157.49/",

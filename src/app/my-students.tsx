@@ -55,7 +55,10 @@ export default function MyStudentsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loading} edges={['top', 'bottom', 'left', 'right']}>
+      <SafeAreaView
+        style={styles.loading}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
@@ -63,13 +66,16 @@ export default function MyStudentsScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.card}>
             <Text style={styles.title}>Your Students</Text>
@@ -104,10 +110,10 @@ export default function MyStudentsScreen() {
                     fontWeight: "600",
                     marginBottom: 12,
                     color: "#333",
-                    textAlign: "center"
+                    textAlign: "center",
                   }}
                 >
-                You have no students yet, go add your first student!
+                  You have no students yet, go add your first student!
                 </Text>
                 <TouchableOpacity
                   onPress={() => router.push("/")}
@@ -137,18 +143,18 @@ export default function MyStudentsScreen() {
                       <Text style={styles.studentTitle}>{student.name}</Text>
 
                       <View style={styles.subInfoGroup}>
-                        <Text style={styles.subLabel}>Parent Name</Text>
+                        <Text style={styles.subLabel}>Parent Id</Text>
                         <Text style={styles.subValue}>
-                          {student.parents?.name || "N/A"}
+                          {student.parents?.id || "N/A"}
                         </Text>
                       </View>
 
-                      <View style={styles.subInfoGroup}>
+                      {/* <View style={styles.subInfoGroup}>
                         <Text style={styles.subLabel}>Parent Email</Text>
                         <Text style={styles.subValue}>
-                          {student.parents?.email || "N/A"}
+                          {student.parents?.phone_number || "N/A"}
                         </Text>
-                      </View>
+                      </View> */}
                     </View>
                   ))}
               </ScrollView>
@@ -197,10 +203,9 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
+    padding: 20,
     marginBottom: 16,
-    fontSize: 16,
+    fontSize: 21,
     color: "#333",
   },
   studentList: {
@@ -216,7 +221,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   studentTitle: {
-    fontSize: 20,
+    fontSize: 30,
     fontWeight: "bold",
     color: "#004A7C",
     marginBottom: 10,
@@ -225,12 +230,12 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   subLabel: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "bold",
     color: "#555",
   },
   subValue: {
-    fontSize: 15,
+    fontSize: 18,
     color: "#333",
   },
 
@@ -241,13 +246,13 @@ const styles = StyleSheet.create({
     elevation: 4,
     alignSelf: "flex-start",
     backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
+    paddingVertical: 10,
+    paddingHorizontal: 20,
     marginBottom: 20, // space below the button so card is pushed down
   },
   backButtonText: {
     color: "#004A7C",
-    fontSize: 16,
+    fontSize: 30,
     fontWeight: "bold",
   },
 });
