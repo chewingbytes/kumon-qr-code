@@ -229,376 +229,206 @@ export default function HomeScreen() {
   }, [studentsDashboard]);
 
   return (
-    <SafeAreaView
-      style={styles.safeArea}
-      edges={["top", "bottom", "left", "right"]}
-    >
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.container}
+    <SafeAreaView style={styles.container}>
+      {/* Hamburger Menu */}
+      <TouchableOpacity
+        style={styles.menuButton}
+        onPress={() => setDropdownVisible(!dropdownVisible)}
       >
-        <View style={styles.topBar}>
-          <View style={styles.barContainer}>
-            <View style={styles.leftGroup}>
-              <Image
-                source={{
-                  uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
-                }}
-                style={styles.logoIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.header}>Kumi</Text>
-            </View>
+        <Text style={styles.hamburgerIcon}>☰</Text>
+      </TouchableOpacity>
 
+      {/* Center Content */}
+      <View style={styles.centerContent}>
+        <Image
+          source={{
+            uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logo.png",
+          }}
+          style={styles.logo}
+        />
+        <Text style={styles.welcomeText}>Welcome to Kumon Punggol Plaza</Text>
+
+        <TouchableOpacity
+          style={styles.scanButton}
+          onPress={() => router.push("/scanner")}
+        >
+          <Text style={styles.scanText}>Scan QR Code</Text>
+        </TouchableOpacity>
+      </View>
+      {dropdownVisible && (
+        <View style={styles.dropdownMenu}>
+          <Pressable onPress={() => router.push("/profile")}>
+            <Text style={styles.dropdownItem}>My Profile</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/my-students")}>
+            <Text style={styles.dropdownItem}>My Students</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setModalVisible(true);
+              setDropdownVisible(false);
+            }}
+          >
+            <Text style={styles.dropdownItem}>Add Students</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              Alert.alert(
+                "Are you sure?",
+                "This will finish the day and email the attendance Excel report.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Yes, proceed",
+                    onPress: () => finishDay(),
+                  },
+                ]
+              );
+              setDropdownVisible(false);
+            }}
+          >
+            <Text style={styles.dropdownItem}>Finish the Day</Text>
+          </Pressable>
+        </View>
+      )}
+
+      {/* Modal */}
+      <Modal visible={modalVisible} animationType="slide">
+        <SafeAreaView style={styles.modalContainer}>
+          {/* Header */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Add Students</Text>
             <TouchableOpacity
-              onPress={() => setDropdownVisible(!dropdownVisible)}
+              onPress={() => setModalVisible(false)}
+              style={styles.modalCloseBtn}
             >
-              <Text style={styles.hamburgerIcon}>☰</Text>
+              <Text style={styles.modalCloseText}>✕</Text>
             </TouchableOpacity>
           </View>
-        </View>
 
-        <View style={styles.mainRow}>
-          {/* Left: Students Dashboard */}
-          <View style={styles.leftPanel}>
+          {/* Content */}
+          <ScrollView contentContainerStyle={styles.modalContent}>
             <TextInput
-              placeholder="Search student..."
-              value={searchQuery}
-              onChangeText={setSearchQuery}
               style={styles.input}
-              placeholderTextColor="#888"
+              placeholder="Student Name"
+              value={studentName}
+              onChangeText={setStudentName}
+              placeholderTextColor="#1F3C88"
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Parent's Number"
+              value={parentNumber}
+              onChangeText={setParentNumber}
+              placeholderTextColor="#1F3C88"
             />
 
-            <ScrollView
-              ref={dashboardScrollRef}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            >
-              {studentsDashboard && studentsDashboard.length > 0 ? (
-                studentsDashboard
-                  .filter((e) =>
-                    e.student_name
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-                  )
-                  .map((entry, idx) => {
-                    const isCheckedIn = entry.status === "checked_in";
-                    return (
-                      <Pressable
-                        key={idx}
-                        style={[
-                          styles.card,
-                          isCheckedIn ? styles.in : styles.out,
-                        ]}
-                        onPress={() => {
-                          setSelectedStudent(entry);
-                          setManualSelect(true); // prevent auto-switching to latest
-                        }}
-                      >
-                        <View style={styles.cardRow}>
-                          <Text style={styles.cardTitle}>
-                            {entry.student_name || entry.students?.name}
-                          </Text>
-                          <Text
-                            style={[
-                              styles.statusText,
-                              isCheckedIn
-                                ? styles.checkedIn
-                                : styles.checkedOut,
-                            ]}
-                          >
-                            {isCheckedIn ? "Checked In" : "Checked Out"}
-                          </Text>
-                        </View>
-                      </Pressable>
-                    );
-                  })
-              ) : (
-                <SafeAreaView style={styles.loadingSafeArea}>
-                  <ActivityIndicator size="large" color="#004A7C" />
-                </SafeAreaView>
-              )}
-            </ScrollView>
-          </View>
-
-          {/* Right: Action Panel */}
-          {/* Right: Action Panel */}
-          <View style={styles.rightPanel}>
-            {selectedStudent ? (
-              <View style={styles.infoCard}>
-                <Text style={styles.infoTitle}>Info Card</Text>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Name:</Text>
-                  <Text style={styles.infoValue}>
-                    {selectedStudent.student_name}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Date:</Text>
-                  <Text style={styles.infoValue}>
-                    {new Date(selectedStudent.checkin_time).toLocaleDateString(
-                      "en-SG"
-                    )}
-                  </Text>
-                </View>
-
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Checked In:</Text>
-                  <Text style={styles.infoValue}>
-                    {new Date(selectedStudent.checkin_time).toLocaleTimeString(
-                      "en-SG"
-                    )}
-                  </Text>
-                </View>
-
-                {selectedStudent.checkout_time && (
-                  <View style={styles.infoRow}>
-                    <Text style={styles.infoLabel}>Checked Out:</Text>
-                    <Text style={styles.infoValue}>
-                      {new Date(
-                        selectedStudent.checkout_time
-                      ).toLocaleTimeString("en-SG")}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            ) : (
-              <Text style={styles.noDataText}>
-                Select a student to see details
-              </Text>
-            )}
-
-            <Pressable style={styles.scanButton} onPress={startScan}>
-              <Text style={styles.scanButtonText}>Scan QR Code</Text>
+            <Pressable style={styles.addButton} onPress={addStudent}>
+              <Text style={styles.addButtonText}>Add</Text>
             </Pressable>
-          </View>
-        </View>
 
-        {/* Modal */}
-        <Modal visible={modalVisible} animationType="slide">
-          <SafeAreaView style={styles.modalContainer}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Add Students</Text>
-              <TouchableOpacity
-                onPress={() => setModalVisible(false)}
-                style={styles.modalCloseBtn}
-              >
-                <Text style={styles.modalCloseText}>✕</Text>
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView contentContainerStyle={styles.modalContent}>
-              <TextInput
-                style={styles.input}
-                placeholder="Student Name"
-                value={studentName}
-                onChangeText={setStudentName}
-                placeholderTextColor="gray"
-              />
-              <TextInput
-                style={styles.input}
-                placeholder="Parent's Number"
-                value={parentNumber}
-                onChangeText={setParentNumber}
-                placeholderTextColor="gray"
-              />
-
-              <Pressable style={styles.addButton} onPress={addStudent}>
-                <Text style={styles.addButtonText}>Add</Text>
-              </Pressable>
-
-              {students.length > 0 &&
-                students.map((s, i) => (
-                  <View key={i} style={styles.studentItem}>
-                    <View
-                      style={{
-                        flexDirection: "row",
-                        justifyContent: "space-between",
-                        alignItems: "center",
-                      }}
-                    >
-                      <View>
-                        <Text style={styles.studentName}>{s.name}</Text>
-                        <Text style={styles.studentParentLabel}>
-                          Number: {s.parentNumber}
-                        </Text>
-                      </View>
-
-                      {/* X Button */}
-                      <TouchableOpacity
-                        style={styles.removeButton}
-                        onPress={() => {
-                          setStudents((prev) =>
-                            prev.filter((_, idx) => idx !== i)
-                          );
-                        }}
-                      >
-                        <Text style={styles.removeButtonText}>✕</Text>
-                      </TouchableOpacity>
+            {/* Students List */}
+            {students.length > 0 &&
+              students.map((s, i) => (
+                <View key={i} style={styles.studentItem}>
+                  <View style={styles.studentRow}>
+                    <View>
+                      <Text style={styles.studentName}>{s.name}</Text>
+                      <Text style={styles.studentParentLabel}>
+                        Number: {s.parentNumber}
+                      </Text>
                     </View>
+                    <TouchableOpacity
+                      style={styles.removeButton}
+                      onPress={() =>
+                        setStudents((prev) =>
+                          prev.filter((_, idx) => idx !== i)
+                        )
+                      }
+                    >
+                      <Text style={styles.removeButtonText}>✕</Text>
+                    </TouchableOpacity>
                   </View>
-                ))}
+                </View>
+              ))}
 
-              <View
-                style={{ flexDirection: "row", marginTop: 20, columnGap: 20 }}
+            {/* CSV & Submit Buttons */}
+            <View style={styles.buttonRow}>
+              <Pressable
+                style={[styles.uploadCSVButton, { flex: 1 }]}
+                onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
+                disabled={uploading}
               >
-                <Pressable
-                  style={[styles.uploadCSVButton, { flex: 1 }]}
-                  onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
-                  disabled={uploading}
-                >
-                  <Text style={styles.uploadCsvText}>
-                    {uploading
-                      ? "Uploading..."
-                      : pickedCSV
-                      ? `Upload: ${csvFileName}`
-                      : "Import CSV"}
-                  </Text>
-                </Pressable>
-                <Pressable
-                  style={[styles.primaryButton, { flex: 1 }]}
-                  onPress={submitStudents}
-                >
-                  <Text style={styles.primaryButtonText}>Submit</Text>
-                </Pressable>
-              </View>
-            </ScrollView>
-          </SafeAreaView>
-        </Modal>
-        {dropdownVisible && (
-          <View style={styles.dropdownMenu}>
-            <Pressable onPress={() => router.push("/profile")}>
-              <Text style={styles.dropdownItem}>My Profile</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push("/my-students")}>
-              <Text style={styles.dropdownItem}>My Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setModalVisible(true);
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Add Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                Alert.alert(
-                  "Are you sure?",
-                  "This will finish the day and email the attendance Excel report.",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Yes, proceed",
-                      onPress: () => finishDay(),
-                    },
-                  ]
-                );
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Finish the Day</Text>
-            </Pressable>
-          </View>
-        )}
+                <Text style={styles.uploadCsvText}>
+                  {uploading
+                    ? "Uploading..."
+                    : pickedCSV
+                    ? `Upload: ${csvFileName}`
+                    : "Import CSV"}
+                </Text>
+              </Pressable>
+              <Pressable
+                style={[styles.primaryButton, { flex: 1 }]}
+                onPress={submitStudents}
+              >
+                <Text style={styles.primaryButtonText}>Submit</Text>
+              </Pressable>
+            </View>
+          </ScrollView>
+        </SafeAreaView>
+      </Modal>
 
-        {dropdownVisible && (
-          <View style={styles.dropdownMenu}>
-            <Pressable onPress={() => router.push("/profile")}>
-              <Text style={styles.dropdownItem}>My Profile</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push("/my-students")}>
-              <Text style={styles.dropdownItem}>My Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setModalVisible(true);
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Add Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                Alert.alert(
-                  "Are you sure?",
-                  "This will finish the day and email the attendance Excel report.",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Yes, proceed",
-                      onPress: () => finishDay(),
-                    },
-                  ]
-                );
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Finish the Day</Text>
-            </Pressable>
-          </View>
-        )}
-      </KeyboardAvoidingView>
+      {dropdownVisible && (
+        <View style={styles.dropdownMenu}>
+          <Pressable onPress={() => router.push("/student-list")}>
+            <Text style={styles.dropdownItem}>Student List</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/profile")}>
+            <Text style={styles.dropdownItem}>My Profile</Text>
+          </Pressable>
+          <Pressable onPress={() => router.push("/my-students")}>
+            <Text style={styles.dropdownItem}>My Students</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              setModalVisible(true);
+              setDropdownVisible(false);
+            }}
+          >
+            <Text style={styles.dropdownItem}>Add Students</Text>
+          </Pressable>
+          <Pressable
+            onPress={() => {
+              Alert.alert(
+                "Are you sure?",
+                "This will finish the day and email the attendance Excel report.",
+                [
+                  { text: "Cancel", style: "cancel" },
+                  {
+                    text: "Yes, proceed",
+                    onPress: () => finishDay(),
+                  },
+                ]
+              );
+              setDropdownVisible(false);
+            }}
+          >
+            <Text style={styles.dropdownItem}>Finish the Day</Text>
+          </Pressable>
+        </View>
+      )}
     </SafeAreaView>
   );
 }
 
 const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: "#f0f9ff" },
-  container: { flex: 1 },
-  header: {
-    fontSize: 30,
-    fontWeight: "bold",
-    color: "#004A7C",
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    padding: 20,
-    marginBottom: 16,
-    backgroundColor: "#fff",
-    fontSize: 21,
-  },
-  card: {
-    padding: 24, // was 14
-    borderRadius: 14, // slightly bigger
-    marginBottom: 16,
-    borderWidth: 2,
-  },
-  in: { backgroundColor: "#e0f7fa", borderColor: "#00796b" },
-  out: { backgroundColor: "#fce4ec", borderColor: "#c2185b" },
-  cardTitle: { fontWeight: "bold", fontSize: 30, color: "#004A7C" }, // was 16
-  cardDetail: { fontSize: 18, marginTop: 6 }, // was 14
-  primaryButton: {
-    backgroundColor: "#004A7C",
-    padding: 14,
-    borderRadius: 10,
+  container: {
+    flex: 1,
+    backgroundColor: "#A7C7E7", // retro blue base
     alignItems: "center",
-    marginVertical: 10,
+    justifyContent: "center",
   },
-  uploadCSVButton: {
-    backgroundColor: "#fff",
-    padding: 14,
-    borderRadius: 10,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  primaryButtonText: { color: "#fff", fontWeight: "bold" },
-  uploadCsvText: { color: "#004A7C", fontWeight: "bold" },
-  secondaryButton: {
-    backgroundColor: "#fff",
-    borderWidth: 1,
-    borderColor: "#004A7C",
-    padding: 14,
-    borderRadius: 10,
-    alignItems: "center",
-    marginVertical: 10,
-  },
-  secondaryButtonText: { color: "#004A7C", fontWeight: "bold" },
+
   dropdown: {
     backgroundColor: "#fff",
     borderRadius: 10,
@@ -609,92 +439,6 @@ const styles = StyleSheet.create({
   dropdownItem: {
     paddingVertical: 10,
     fontSize: 16,
-    color: "#004A7C",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    padding: 20,
-    elevation: 4,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#004A7C" },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FF6B6B",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalCloseText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
-  modalContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  addButton: {
-    backgroundColor: "#FF6B6B",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginBottom: 16,
-  },
-  addButtonText: { color: "#fff", fontWeight: "bold", fontSize: 20 },
-  studentPreview: { marginTop: 8, color: "#004A7C" },
-  content: {
-    flex: 1, // fills available space
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 20,
-    borderColor: "#004A7C", // a nice deep blue to match your theme
-    borderWidth: 2, // visible border
-    borderRadius: 12, // rounded corners
-    backgroundColor: "#ffffff", // white background for contrast
-    margin: 20, // keep it away from screen edges
-  },
-  dashboardListContainer: {
-    flex: 1, // Makes list fill remaining space
-  },
-  footer: {
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: "#f0f9ff",
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  barContainer: {
-    position: "relative",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-    width: "100%",
-  },
-  logoIcon: {
-    width: 35,
-    height: 35,
-  },
-
-  hamburgerIcon: {
-    fontSize: 40,
-    fontWeight: "bold",
     color: "#004A7C",
   },
 
@@ -715,150 +459,212 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2,
     shadowRadius: 5,
   },
-  leftGroup: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: 10, // if not supported, use marginRight on logo
-  },
-  studentItem: {
-    marginBottom: 20,
-    padding: 20, // was 14
-    borderRadius: 14, // was 10
-    backgroundColor: "#ffffff",
-    borderWidth: 2, // was 1
-    borderColor: "#ccc",
-    elevation: 3,
-  },
-  studentName: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 6,
-  }, // was 18
-  studentParentLabel: {
-    fontSize: 18,
-    fontWeight: "600",
-    color: "#555",
-    marginTop: 6,
-  }, // was 14
-  studentParent: {
-    fontSize: 16,
-    color: "#333",
-    marginTop: 2,
-  },
-  loadingSafeArea: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  mainRow: {
-    flex: 1,
-    flexDirection: "row",
-    padding: 20,
-    gap: 20, // if not supported, use marginRight on leftPanel
-  },
 
-  leftPanel: {
-    flex: 7,
-    backgroundColor: "#fff",
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    padding: 16,
+  // Top-right hamburger
+  menuButton: {
+    position: "absolute",
+    top: 20,
+    right: 20,
   },
-
-  scanButtonText: {
-    color: "#fff",
-    fontSize: 25,
-    fontWeight: "bold",
-  },
-
-  scanButton: {
-    flex: 1, // takes 1/4 of right panel
-    width: "100%",
-    backgroundColor: "#004A7C",
-    justifyContent: "center",
-    alignItems: "center",
-    borderRadius: 12,
-    marginTop: 20,
-  },
-  rightPanel: {
-    flex: 3,
-    flexDirection: "column",
-    justifyContent: "center", // center vertically
-    alignItems: "center", // center horizontally
-  },
-
-  infoCard: {
-    width: "100%",
-    padding: 24,
-    backgroundColor: "#ffffff",
-    borderRadius: 16,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-  },
-
-  infoTitle: {
+  hamburgerIcon: {
     fontSize: 28,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 20,
+    color: "#1F3C88", // darker retro navy
   },
 
-  infoRow: {
-    marginBottom: 16,
-    width: "100%",
+  // Center elements
+  centerContent: {
+    alignItems: "center",
+    justifyContent: "center",
   },
-
-  infoLabel: {
+  logo: {
+    width: 150,
+    height: 150,
+    borderRadius: 75,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    backgroundColor: "#EAF0FA",
+  },
+  welcomeText: {
+    fontSize: 24,
+    marginTop: 20,
+    fontFamily: "Pacifico-Regular", // or Dancing Script / Great Vibes
+    color: "#1F3C88",
+    textAlign: "center",
+  },
+  scanButton: {
+    marginTop: 30,
+    backgroundColor: "#F2E9E4",
+    paddingVertical: 12,
+    paddingHorizontal: 35,
+    borderRadius: 30,
+    borderWidth: 2,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 3 },
+    shadowOpacity: 0.15,
+    shadowRadius: 4,
+  },
+  scanText: {
     fontSize: 18,
-    fontWeight: "bold",
-    color: "#004A7C",
+    color: "#1F3C88",
+    fontWeight: "600",
+    letterSpacing: 1,
   },
 
-  infoValue: {
-    fontSize: 23,
-    color: "#333333",
+  modalContainer: {
+    flex: 1,
+    backgroundColor: "#68AEB8", // golden retro background
+    padding: 20,
   },
-
-  noDataText: {
-    fontSize: 20, // bigger
-    color: "#555555",
-    marginTop: 12,
-  },
-  cardRow: {
+  modalHeader: {
     flexDirection: "row",
     justifyContent: "space-between",
     alignItems: "center",
-    paddingVertical: 10,
+    paddingBottom: 10,
+    borderBottomWidth: 4,
+    borderBottomColor: "#1F3C88",
   },
-
-  statusText: {
-    fontSize: 14,
+  modalTitle: {
+    fontSize: 28,
     fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
   },
-
-  checkedIn: {
-    color: "#00796b", // greenish for checked in
+  modalCloseBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: "#1F3C88",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.5,
+    shadowRadius: 3,
   },
-
-  checkedOut: {
-    color: "#c2185b", // reddish for checked out
+  modalCloseText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontSize: 20,
+  },
+  modalContent: {
+    paddingVertical: 20,
+    paddingHorizontal: 10,
+  },
+  input: {
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    borderRadius: 20,
+    paddingVertical: 15,
+    paddingHorizontal: 20,
+    marginBottom: 16,
+    backgroundColor: "#ADC5CE",
+    fontSize: 18,
+    fontFamily: "Courier",
+    color: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  addButton: {
+    backgroundColor: "#d4dffd",
+    paddingVertical: 12,
+    borderRadius: 30,
+    alignItems: "center",
+    marginBottom: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+  },
+  addButtonText: {
+    color: "#1F3C88",
+    fontWeight: "bold",
+    fontSize: 20,
+    fontFamily: "Pacifico-Regular",
+  },
+  studentItem: {
+    backgroundColor: "#FFFACD",
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    borderRadius: 20,
+    padding: 16,
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  studentRow: {
+    flexDirection: "row",
+    justifyContent: "space-between",
+    alignItems: "center",
+  },
+  studentName: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
+  },
+  studentParentLabel: {
+    fontSize: 16,
+    fontWeight: "600",
+    color: "#1F3C88",
+    marginTop: 4,
+    fontFamily: "Courier",
   },
   removeButton: {
-    marginBottom: 50,
     width: 32,
     height: 32,
     borderRadius: 16,
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#1F3C88",
     justifyContent: "center",
     alignItems: "center",
   },
-
   removeButtonText: {
     color: "#fff",
     fontWeight: "bold",
+    fontSize: 18,
+  },
+  buttonRow: {
+    flexDirection: "row",
+    marginTop: 20,
+    columnGap: 16,
+  },
+  uploadCSVButton: {
+    backgroundColor: "#FFFACD",
+    paddingVertical: 12,
+    borderRadius: 30,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  uploadCsvText: {
+    color: "#1F3C88",
+    fontWeight: "bold",
+    fontFamily: "Courier",
+  },
+  primaryButton: {
+    backgroundColor: "#1F3C88",
+    paddingVertical: 12,
+    borderRadius: 30,
+    justifyContent: "center",
+    alignItems: "center",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+  },
+  primaryButtonText: {
+    color: "#fff",
+    fontWeight: "bold",
+    fontFamily: "Pacifico-Regular",
     fontSize: 18,
   },
 });

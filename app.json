@@ -4,10 +4,10 @@
     "slug": "kumi-attendance",
     "scheme": "kumi",
     "version": "1.0.0",
-    "icon": "./assets/kumi-logo.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/kumi-logo.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#f0f9ff"
     },
@@ -56,7 +56,7 @@
       "expo-build-properties"
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE": "http://46.62.157.49/",
+      "EXPO_PUBLIC_API_BASE": "http://localhost:8080/",
       "eas": {
         "projectId": "ac98a74c-03e4-4dee-9e04-acbdf735e2a7"
       }

@@ -53,42 +53,62 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={styles.loadingSafeArea} edges={['top', 'bottom', 'left', 'right']}>
+      <SafeAreaView
+        style={styles.loadingSafeArea}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={styles.safeArea} edges={['top', 'bottom', 'left', 'right']}>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["top", "bottom", "left", "right"]}
+    >
       <ScrollView contentContainerStyle={styles.container}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.push("/")}
-        >
-          <Text style={styles.backButtonText}>Back</Text>
-        </TouchableOpacity>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push("/")}
+          >
+            <Text style={styles.backButtonText}>⬅ Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>My Profile</Text>
+        </View>
 
+        {/* Profile Card */}
         <View style={styles.card}>
-          <Text style={styles.title}>My Profile</Text>
-
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>Email</Text>
-            <Text style={styles.value}>{user.email}</Text>
-          </View>
-
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>User ID</Text>
-            <Text style={styles.value}>{user.id}</Text>
-          </View>
-
-          <View style={styles.infoGroup}>
-            <Text style={styles.label}>Created At</Text>
-            <Text style={styles.value}>
-              {new Date(user.created_at).toLocaleString()}
+          {/* Avatar / Icon */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user.email.charAt(0).toUpperCase()}
             </Text>
           </View>
 
+          {/* Info Grid */}
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{user.email}</Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>User ID</Text>
+              <Text style={styles.value}>{user.id}</Text>
+            </View>
+
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>Created At</Text>
+              <Text style={styles.value}>
+                {new Date(user.created_at).toLocaleString()}
+              </Text>
+            </View>
+          </View>
+
+          {/* Logout Button */}
           <Pressable onPress={handleLogout} style={styles.logoutButton}>
             <Text style={styles.logoutText}>Log out</Text>
           </Pressable>
@@ -103,80 +123,137 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#A7C7E7",
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#A7C7E7",
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
+    alignItems: "center",
   },
-  card: {
+
+  // Header
+  header: {
     width: "100%",
-    backgroundColor: "#fff",
-    borderRadius: 16,
-    padding: 30,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 6,
-    alignItems: "flex-start",
-  },
-  title: {
-    fontSize: 32,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 30,
-    alignSelf: "center",
-  },
-  infoGroup: {
-    marginBottom: 24,
-    width: "100%",
-  },
-  label: {
-    fontSize: 22,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 8,
-  },
-  value: {
-    fontSize: 22,
-    color: "#333",
-    backgroundColor: "#f9f9f9",
-    padding: 16,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 10,
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
   },
   backButton: {
-    borderRadius: 14,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    backgroundColor: "#ffffff",
-    paddingVertical: 12,
-    paddingHorizontal: 20,
-    marginBottom: 30,
-    alignSelf: "flex-start",
-    elevation: 4,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    backgroundColor: "#F2E9E4",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
   backButtonText: {
-    color: "#004A7C",
-    fontSize: 22,
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
   },
+  pageTitle: {
+    flex: 1,
+    fontSize: 28,
+    fontFamily: "Pacifico-Regular",
+    fontWeight: "bold",
+    color: "#1F3C88",
+    textAlign: "center",
+    marginRight: 40, // ensures back button doesn't overlap
+  },
+
+  // Profile Card
+  card: {
+    width: "100%",
+    backgroundColor: "#F2E9E4",
+    borderRadius: 20,
+    padding: 30,
+    borderWidth: 4,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    alignItems: "center",
+  },
+
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#ADC5CE",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  avatarText: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
+  },
+
+  // Info Grid
+  infoGrid: {
+    width: "100%",
+    marginBottom: 30,
+  },
+  infoItem: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
+    marginBottom: 6,
+  },
+  value: {
+    fontSize: 18,
+    color: "#1F3C88",
+    backgroundColor: "#ADC5CE",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
+    borderWidth: 2,
+    borderColor: "#1F3C88",
+    borderRadius: 16,
+    fontFamily: "Courier",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+
+  // Logout Button
   logoutButton: {
-    backgroundColor: "#FF6B6B",
+    backgroundColor: "#1F3C88",
     paddingVertical: 16,
-    paddingHorizontal: 20,
-    borderRadius: 12,
-    marginTop: 10,
-    alignSelf: "center",
+    paddingHorizontal: 40,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
   },
   logoutText: {
-    color: "#fff",
+    color: "#FFFACD",
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
+    fontFamily: "Pacifico-Regular",
   },
-});
+})

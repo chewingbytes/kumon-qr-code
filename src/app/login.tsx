@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <Image
             source={{
-              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
+              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logo.png",
             }}
             style={styles.logo}
             resizeMode="contain"
