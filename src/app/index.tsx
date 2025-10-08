@@ -322,64 +322,6 @@ export default function HomeScreen() {
   }, [studentsDashboard]);
 
   return (
-<<<<<<< HEAD
-    <SafeAreaView style={styles.safeArea}>
-      <KeyboardAvoidingView
-        behavior={Platform.OS === "ios" ? "padding" : undefined}
-        style={styles.container}
-      >
-        <View style={styles.topBar}>
-          <View style={styles.barContainer}>
-            <View style={styles.leftGroup}>
-              <Image
-                source={{
-                  uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
-                }}
-                style={styles.logoIcon}
-                resizeMode="contain"
-              />
-              <Text style={styles.header}>Kumi</Text>
-            </View>
-
-            <TouchableOpacity
-              onPress={() => setDropdownVisible(!dropdownVisible)}
-            >
-              <Text style={styles.hamburgerIcon}>☰</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-
-        <View style={styles.content}>
-          <TextInput
-            placeholder="Search student..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.input}
-            placeholderTextColor="#888"
-          />
-
-          <View style={[styles.dashboardListContainer]}>
-            <ScrollView
-              ref={dashboardScrollRef}
-              contentContainerStyle={{ paddingBottom: 20 }}
-            >
-              {studentsDashboard && studentsDashboard.length > 0 ? (
-                studentsDashboard
-                  .filter((e) =>
-                    e.student_name
-                      ?.toLowerCase()
-                      .includes(searchQuery.toLowerCase())
-                  )
-                  .map((entry, idx) => {
-                    const isCheckedIn = entry.status === "checked_in";
-                    return (
-                      <View
-                        key={idx}
-                        style={[
-                          styles.card,
-                          isCheckedIn ? styles.in : styles.out,
-                        ]}
-=======
     <SafeAreaView style={styles.container}>
       <View style={styles.rowLayout}>
         <View style={styles.leftList}>
@@ -406,7 +348,6 @@ export default function HomeScreen() {
                           color: "green",
                           fontSize: 18,
                         }}
->>>>>>> my-fix
                       >
                         ✅
                       </Text>
@@ -506,48 +447,6 @@ export default function HomeScreen() {
               >
                 <Text style={styles.dropdownItem}>Add Students</Text>
               </Pressable>
-<<<<<<< HEAD
-            </ScrollView>
-          </SafeAreaView>
-        </Modal>
-        {dropdownVisible && (
-          <View style={styles.dropdownMenu}>
-            <Pressable onPress={() => router.push("/profile")}>
-              <Text style={styles.dropdownItem}>My Profile</Text>
-            </Pressable>
-            <Pressable onPress={() => router.push("/my-students")}>
-              <Text style={styles.dropdownItem}>My Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                setModalVisible(true);
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Add Students</Text>
-            </Pressable>
-            <Pressable
-              onPress={() => {
-                Alert.alert(
-                  "Are you sure?",
-                  "This will finish the day and email the attendance Excel report.",
-                  [
-                    { text: "Cancel", style: "cancel" },
-                    {
-                      text: "Yes, proceed",
-                      onPress: () => finishDay(),
-                    },
-                  ]
-                );
-                setDropdownVisible(false);
-              }}
-            >
-              <Text style={styles.dropdownItem}>Finish the Day</Text>
-            </Pressable>
-          </View>
-        )}
-      </KeyboardAvoidingView>
-=======
               <Pressable
                 onPress={() => {
                   Alert.alert(
@@ -733,7 +632,6 @@ export default function HomeScreen() {
           </Animated.View>
         ))}
       </View>
->>>>>>> my-fix
     </SafeAreaView>
   );
 }
@@ -754,103 +652,9 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dropdownItem: {
-<<<<<<< HEAD
-    paddingVertical: 10,
-    fontSize: 16,
-    color: "#004A7C",
-  },
-  modalContainer: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-  },
-  modalHeader: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingVertical: 16,
-  },
-  modalTitle: { fontSize: 22, fontWeight: "bold", color: "#004A7C" },
-  modalCloseBtn: {
-    width: 32,
-    height: 32,
-    borderRadius: 16,
-    backgroundColor: "#FF6B6B",
-    justifyContent: "center",
-    alignItems: "center",
-  },
-  modalCloseText: { color: "#fff", fontWeight: "bold", fontSize: 18 },
-  modalContent: {
-    paddingHorizontal: 20,
-    paddingBottom: 30,
-  },
-  addButton: {
-    backgroundColor: "#FF6B6B",
-    padding: 12,
-    borderRadius: 10,
-    alignItems: "center",
-    marginVertical: 12,
-  },
-  addButtonText: { color: "#fff", fontWeight: "bold" },
-  studentPreview: { marginTop: 8, color: "#004A7C" },
-  content: {
-    flex: 1, // fills available space
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 20,
-    borderColor: "#004A7C", // a nice deep blue to match your theme
-    borderWidth: 2, // visible border
-    borderRadius: 12, // rounded corners
-    backgroundColor: "#ffffff", // white background for contrast
-    margin: 20, // keep it away from screen edges
-  },
-  dashboardListContainer: {
-    flex: 1, // Makes list fill remaining space
-  },
-  footer: {
-    paddingBottom: 20,
-    paddingHorizontal: 20,
-    backgroundColor: "#f0f9ff",
-  },
-  topBar: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    paddingHorizontal: 20,
-    paddingTop: 10,
-  },
-  barContainer: {
-    position: "relative",
-    flexDirection: "row",
-    justifyContent: "space-between",
-    alignItems: "center",
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingHorizontal: 20,
-    paddingVertical: 10,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-    width: "100%",
-  },
-  logoIcon: {
-    width: 35,
-    height: 35,
-  },
-
-  hamburgerIcon: {
-    fontSize: 28,
-    fontWeight: "bold",
-=======
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     paddingVertical: 15,
     fontSize: 25,
->>>>>>> my-fix
     color: "#004A7C",
   },
 
