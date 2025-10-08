@@ -4,15 +4,16 @@
     "slug": "kumi-attendance",
     "scheme": "kumi",
     "version": "1.0.0",
-    "orientation": "portrait",
-    "icon": "./assets/kumi-logo.png",
+    "icon": "./assets/logo.png",
     "userInterfaceStyle": "light",
     "splash": {
-      "image": "./assets/kumi-logo.png",
+      "image": "./assets/logo.png",
       "resizeMode": "contain",
       "backgroundColor": "#f0f9ff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kumonpunggolplaza.kumi"
@@ -23,7 +24,9 @@
         "foregroundImage": "./assets/kumi-logo.png",
         "backgroundColor": "#f0f9ff"
       },
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/kumi-logo.png"
@@ -39,10 +42,26 @@
           "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera"
         }
       ],
-      "expo-av"
+      [
+        "expo-build-properties",
+        {
+          "android": {
+            "usesCleartextTraffic": true
+          }
+        }
+      ],
+      [
+        "expo-screen-orientation",
+        {
+          "initialOrientation": "DEFAULT"
+        }
+      ],
+      "expo-av",
+      "expo-build-properties",
+      "expo-font"
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE": "http://46.62.157.49/",
+      "EXPO_PUBLIC_API_BASE": "http://localhost:8080/",
       "eas": {
         "projectId": "ac98a74c-03e4-4dee-9e04-acbdf735e2a7"
       }

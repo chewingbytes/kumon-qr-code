@@ -1,15 +1,22 @@
 import Constants from "expo-constants";
 import { createAudioPlayer, useAudioPlayer } from "expo-audio";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useState, useEffect } from "react";
-import { Dimensions, Alert, Vibration, TouchableOpacity } from "react-native";
+import {
+  Dimensions,
+  Alert,
+  Vibration,
+  TouchableOpacity,
+  Animated,
+  Pressable,
+  ScrollView,
+} from "react-native";
 import { Camera, CameraView, CameraType } from "expo-camera";
 import { router } from "expo-router";
 import * as Linking from "expo-linking";
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
-import pako from "pako";
 import { Buffer } from "buffer";
 global.Buffer = global.Buffer || Buffer;
 import { supabase } from "../../lib/supabase";
@@ -22,6 +29,8 @@ console.log("API:", API);
 const postJSON = async (path: string, body: object, accessToken: string) => {
   console.log("querying:", path);
   console.log("with body:", body);
+  console.log("querying th efucking shit:", API + path);
+  console.log("TEOKEN:", accessToken);
   const res = await fetch(API + path, {
     method: "POST",
     headers: {
@@ -30,6 +39,7 @@ const postJSON = async (path: string, body: object, accessToken: string) => {
     },
     body: JSON.stringify(body),
   });
+
   return res.json();
 };
 
@@ -67,6 +77,36 @@ const QRScanner: React.FC = () => {
   const [scanned, setScanned] = useState(false);
 
   const lastScannedTimeStampRef = useRef(0);
+
+  // const fetchStudents = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
+
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
+
+  //     const accessToken = session?.access_token;
+
+  //     const res = await fetch(API + "api/db/students", {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //     });
+
+  //     const json = await res.json();
+  //     if (json.error) throw new Error(json.error);
+
+  //     console.log("✅ Refreshed students:", json.students);
+  //     setStudentsDashboard(json.students);
+  //   } catch (error: any) {
+  //     console.error("Error fetching students:", error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
 
   function toggleCameraFacing() {
     setFacing((current) => (current === "back" ? "front" : "back"));
@@ -106,7 +146,36 @@ const QRScanner: React.FC = () => {
     }
   }, [hasCameraPermission, hasAudioPermission]);
 
+  // const sendWhatsappMessage = async (name: string) => {
+  //   try {
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
+
+  //     const accessToken = session?.access_token;
+
+  //     if (!accessToken) {
+  //       Alert.alert("Error", "No access token found. Please log in again.");
+  //       return;
+  //     }
+
+  //     const res = await postJSON("api/db/sendMessage", { name }, accessToken);
+  //     console.log("REESS:", res);
+
+  //     if (res === false) {
+  //       return false;
+  //     } else if (res === true) {
+  //       return true;
+  //     }
+  //   } catch (err) {
+  //     console.error("sendWhatsappMessage error:", err);
+  //     Alert.alert("Error", "Something went wrong while sending the message.");
+  //     return false;
+  //   }
+  // };
+
   const handleCheckOut = async (name: string) => {
+    console.log("CHEKCING OUT NAME:", name);
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -114,10 +183,14 @@ const QRScanner: React.FC = () => {
     const accessToken = session?.access_token;
 
     const { error } = await postJSON("api/db/checkout", { name }, accessToken);
-    if (error) Alert.alert("Error", error);
+
+    if (error) {
+      Alert.alert("Error", error);
+    }
   };
 
   const handleCheckIn = async (name: string) => {
+    router.push("/");
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -125,7 +198,9 @@ const QRScanner: React.FC = () => {
     const accessToken = session?.access_token;
 
     const { error } = await postJSON("api/db/checkin", { name }, accessToken);
-    if (error) Alert.alert("Error", error);
+    if (error) {
+      Alert.alert("Error", error);
+    }
   };
 
   const handleBarCodeScanned = async ({ data }) => {
@@ -140,13 +215,7 @@ const QRScanner: React.FC = () => {
 
       lastScannedTimeStampRef.current = timestamp;
 
-      const compressedData = Buffer.from(data, "hex");
-      const decompressedData = pako.inflate(compressedData, { to: "string" });
-      const parsedData = JSON.parse(decompressedData);
-
-      console.log(parsedData);
-
-      const { name } = parsedData;
+      const name = data.trim();
 
       player.seekTo(0);
       player.play();
@@ -179,12 +248,15 @@ const QRScanner: React.FC = () => {
             { text: "Cancel", style: "cancel" },
             {
               text: "Check In",
-              onPress: () => handleCheckIn(name),
+              onPress: async () => {
+                await handleCheckIn(name);
+              },
             },
           ]
         );
       } else {
-        await handleCheckOut(name);
+        console.log("HANDLING CHCKOUT WITH NAME:", name);
+        handleCheckOut(name);
       }
     } catch (error) {
       console.error("error:", error);
@@ -197,41 +269,80 @@ const QRScanner: React.FC = () => {
     }
   };
 
+  // let notificationId = 0; // outside component, or use useRef for persistent ID
+
+  // const showSuccessNotification = (studentName: string, result: boolean) => {
+  //   const id = notificationId++;
+  //   const message =
+  //     result === true
+  //       ? `Message sent successfully to ${studentName}'s parents!`
+  //       : "An error occurred";
+
+  //   setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+  //   // auto-hide after 3 seconds
+  //   setTimeout(() => {
+  //     setSuccessNotifications((prev) =>
+  //       prev.filter((notif) => notif.id !== id)
+  //     );
+  //   }, 3000);
+  // };
+
   const goToSettings = () => {
     Linking.openSettings();
   };
 
   if (hasCameraPermission && hasAudioPermission) {
     return (
-      <CameraView
-        ref={cameraRef}
-        facing={facing}
-        onBarcodeScanned={handleBarCodeScanned}
-        animateShutter={true}
-        barcodeScannerSettings={{
-          barcodeTypes: ["qr"],
-        }}
-        style={{ height: Dimensions.get("window").height }}
-      >
-        {successMessage && (
-          <View style={styles.popup}>
-            <Text style={styles.popupText}>{successMessage}</Text>
-          </View>
-        )}
+      <View style={{ flexDirection: "row", flex: 1 }}>
+        {/* 📷 Left side - Camera area */}
+        <View style={{ width: "100%", height: "100%" }}>
+          <CameraView
+            ref={cameraRef}
+            style={{ width: "100%", height: "100%", borderRadius: 16 }}
+            facing={facing}
+            onBarcodeScanned={handleBarCodeScanned}
+            animateShutter
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          />
 
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => router.push("/")}
-        >
-          <Text style={styles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
+          {/* ✅ Overlay UI */}
+          {successMessage && (
+            <View
+              style={[
+                styles.popup,
+                { position: "absolute", top: "70%", alignSelf: "center" },
+              ]}
+            >
+              <Text style={styles.popupText}>{successMessage}</Text>
+            </View>
+          )}
 
-        <View style={styles.buttonContainer}>
-          <TouchableOpacity style={styles.button} onPress={toggleCameraFacing}>
-            <Text style={styles.text}>Flip Camera</Text>
+          <TouchableOpacity
+            style={[
+              styles.backButton,
+              { position: "absolute", top: 20, left: 20 },
+            ]}
+            onPress={() => router.push("/")}
+          >
+            <Text style={styles.backButtonText}>⬅ Back</Text>
           </TouchableOpacity>
+
+          <View
+            style={[
+              styles.buttonContainer,
+              { position: "absolute", bottom: 40, alignSelf: "center" },
+            ]}
+          >
+            <TouchableOpacity
+              style={styles.button}
+              onPress={toggleCameraFacing}
+            >
+              <Text style={styles.text}>Flip Camera</Text>
+            </TouchableOpacity>
+          </View>
         </View>
-      </CameraView>
+      </View>
     );
   }
 };
@@ -241,17 +352,16 @@ const styles = StyleSheet.create({
     position: "absolute",
     top: 40,
     left: 20,
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    borderRadius: 12,
-    borderWidth: 2,
-    zIndex: 10,
-    elevation: 10,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    backgroundColor: "#F2E9E4",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
     shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
+    shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.3,
-    shadowRadius: 2,
+    shadowRadius: 3,
   },
   backButtonText: {
     color: "#004A7C",
@@ -267,15 +377,11 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   button: {
-    backgroundColor: "#33C1FF", // Kumon Red
+    backgroundColor: "#33B5E5",
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 30,
     elevation: 5,
-    shadowColor: "#000",
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.2,
-    shadowRadius: 4,
   },
   text: {
     fontSize: 18,

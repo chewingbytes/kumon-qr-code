@@ -3,15 +3,14 @@ import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   ScrollView,
   Alert,
   Pressable,
   TouchableOpacity,
 } from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 import { supabase } from "../../lib/supabase";
-import { Button } from "react-native-paper";
 import { router } from "expo-router";
 
 export default function ProfileScreen() {
@@ -54,134 +53,207 @@ export default function ProfileScreen() {
 
   if (!user) {
     return (
-      <SafeAreaView style={localStyles.loadingSafeArea}>
+      <SafeAreaView
+        style={styles.loadingSafeArea}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
   }
 
   return (
-    <SafeAreaView style={localStyles.safeArea}>
-      <View style={localStyles.container}>
-        <TouchableOpacity
-          style={localStyles.backButton}
-          onPress={() => router.push("/")}
-        >
-          <Text style={localStyles.backButtonText}>← Back</Text>
-        </TouchableOpacity>
-        <View>
-          <View style={localStyles.card}>
-            <Text style={localStyles.title}>My Profile</Text>
+    <SafeAreaView
+      style={styles.safeArea}
+      edges={["top", "bottom", "left", "right"]}
+    >
+      <ScrollView contentContainerStyle={styles.container}>
+        {/* Header */}
+        <View style={styles.header}>
+          <TouchableOpacity
+            style={styles.backButton}
+            onPress={() => router.push("/")}
+          >
+            <Text style={styles.backButtonText}>⬅ Back</Text>
+          </TouchableOpacity>
+          <Text style={styles.pageTitle}>My Profile</Text>
+        </View>
 
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>Email</Text>
-              <Text style={localStyles.value}>{user.email}</Text>
+        {/* Profile Card */}
+        <View style={styles.card}>
+          {/* Avatar / Icon */}
+          <View style={styles.avatar}>
+            <Text style={styles.avatarText}>
+              {user.email.charAt(0).toUpperCase()}
+            </Text>
+          </View>
+
+          {/* Info Grid */}
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>Email</Text>
+              <Text style={styles.value}>{user.email}</Text>
             </View>
 
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>User ID</Text>
-              <Text style={localStyles.value}>{user.id}</Text>
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>User ID</Text>
+              <Text style={styles.value}>{user.id}</Text>
             </View>
 
-            <View style={localStyles.infoGroup}>
-              <Text style={localStyles.label}>Created At</Text>
-              <Text style={localStyles.value}>
+            <View style={styles.infoItem}>
+              <Text style={styles.label}>Created At</Text>
+              <Text style={styles.value}>
                 {new Date(user.created_at).toLocaleString()}
               </Text>
             </View>
-
-            <Pressable onPress={() => handleLogout()}>
-              <Text style={localStyles.dropdownItem}>Log out</Text>
-            </Pressable>
           </View>
+
+          {/* Logout Button */}
+          <Pressable onPress={handleLogout} style={styles.logoutButton}>
+            <Text style={styles.logoutText}>Log out</Text>
+          </Pressable>
         </View>
-      </View>
+      </ScrollView>
     </SafeAreaView>
   );
 }
 
-const localStyles = StyleSheet.create({
+const styles = StyleSheet.create({
   loadingSafeArea: {
     flex: 1,
-    alignItems: "center",
     justifyContent: "center",
+    alignItems: "center",
+    backgroundColor: "#A7C7E7",
   },
   safeArea: {
     flex: 1,
-    alignItems: "center",
-    backgroundColor: "#f0f9ff"
+    backgroundColor: "#A7C7E7",
   },
   container: {
-    flex: 1,
+    flexGrow: 1,
     padding: 20,
+    alignItems: "center",
   },
-  card: {
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    padding: 20,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-  },
-  title: {
-    fontSize: 24,
-    fontWeight: "bold",
-    color: "#004A7C",
+
+  // Header
+  header: {
+    width: "100%",
+    flexDirection: "row",
+    alignItems: "center",
     marginBottom: 20,
-    textAlign: "center",
   },
-  infoGroup: {
+  backButton: {
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    backgroundColor: "#F2E9E4",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  backButtonText: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  pageTitle: {
+    flex: 1,
+    fontSize: 28,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+    fontWeight: "bold",
+    color: "#1F3C88",
+    textAlign: "center",
+    marginRight: 40, // ensures back button doesn't overlap
+  },
+
+  // Profile Card
+  card: {
+    width: "100%",
+    backgroundColor: "#F2E9E4",
+    borderRadius: 20,
+    padding: 30,
+    borderWidth: 4,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+    alignItems: "center",
+  },
+
+  avatar: {
+    width: 100,
+    height: 100,
+    borderRadius: 50,
+    backgroundColor: "#ADC5CE",
+    justifyContent: "center",
+    alignItems: "center",
+    marginBottom: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+  avatarText: {
+    fontSize: 36,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+
+  // Info Grid
+  infoGrid: {
+    width: "100%",
+    marginBottom: 30,
+  },
+  infoItem: {
     marginBottom: 16,
   },
   label: {
-    fontSize: 14,
+    fontSize: 20,
     fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 4,
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+    marginBottom: 6,
   },
   value: {
-    fontSize: 16,
-    color: "#333",
-    backgroundColor: "#fff",
-    padding: 10,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-  },
-  primaryButton: {
-    backgroundColor: "#004A7C",
-    padding: 14,
-    borderRadius: 10,
-    marginTop: 20,
-    alignItems: "center",
-  },
-  primaryButtonText: {
-    color: "#fff",
-    fontWeight: "bold",
-  },
-  dropdownItem: {
-    paddingVertical: 20,
-    fontSize: 16,
-    color: "#004A7C",
-    textAlign: "center",
-  },
-  backButton: {
-    borderRadius: 12,
+    fontSize: 18,
+    color: "#1F3C88",
+    backgroundColor: "#ADC5CE",
+    paddingVertical: 12,
+    paddingHorizontal: 16,
     borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
-    alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginBottom: 20, // space below the button so card is pushed down
+    borderColor: "#1F3C88",
+    borderRadius: 16,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
   },
-  backButtonText: {
-    color: "#004A7C",
-    fontSize: 16,
+
+  // Logout Button
+  logoutButton: {
+    backgroundColor: "#1F3C88",
+    paddingVertical: 16,
+    paddingHorizontal: 40,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+  },
+  logoutText: {
+    color: "#FFFACD",
+    fontSize: 22,
     fontWeight: "bold",
-  },
-  buttoncontainer: {
-    padding: 20,
+    textAlign: "center",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 });

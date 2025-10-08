@@ -1,10 +1,11 @@
+//http://46.62.157.49/
 import { useEffect, useState } from "react";
 import { router } from "expo-router";
+import { SafeAreaView } from "react-native-safe-area-context";
 import {
   View,
   Text,
   StyleSheet,
-  SafeAreaView,
   ActivityIndicator,
   ScrollView,
   TextInput,
@@ -55,7 +56,10 @@ export default function MyStudentsScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.loading}>
+      <SafeAreaView
+        style={styles.loading}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <ActivityIndicator size="large" color="#004A7C" />
       </SafeAreaView>
     );
@@ -63,20 +67,23 @@ export default function MyStudentsScreen() {
 
   return (
     <>
-      <SafeAreaView style={styles.safeArea}>
+      <SafeAreaView
+        style={styles.safeArea}
+        edges={["top", "bottom", "left", "right"]}
+      >
         <View style={styles.container}>
           <TouchableOpacity
             style={styles.backButton}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>← Back</Text>
+            <Text style={styles.backButtonText}>⬅ Back</Text>
           </TouchableOpacity>
           <View style={styles.card}>
             <Text style={styles.title}>Your Students</Text>
 
             <TextInput
               placeholder="Search students..."
-              placeholderTextColor="#999"
+              placeholderTextColor="#1F3C88"
               style={styles.searchInput}
               value={searchQuery}
               onChangeText={setSearchQuery}
@@ -93,9 +100,14 @@ export default function MyStudentsScreen() {
               >
                 <Image
                   source={{
-                    uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//cat-thumbs-up.png",
+                    uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logoarm.png",
                   }}
-                  style={{ width: 200, height: 200, marginBottom: 20 }}
+                  style={{
+                    width: 200,
+                    height: 200,
+                    marginBottom: 20,
+                    borderRadius: "999px",
+                  }}
                   resizeMode="contain"
                 />
                 <Text
@@ -104,10 +116,10 @@ export default function MyStudentsScreen() {
                     fontWeight: "600",
                     marginBottom: 12,
                     color: "#333",
-                    textAlign: "center"
+                    textAlign: "center",
                   }}
                 >
-                You have no students yet, go add your first student!
+                  You have no students yet, go add your first student!
                 </Text>
                 <TouchableOpacity
                   onPress={() => router.push("/")}
@@ -137,18 +149,18 @@ export default function MyStudentsScreen() {
                       <Text style={styles.studentTitle}>{student.name}</Text>
 
                       <View style={styles.subInfoGroup}>
-                        <Text style={styles.subLabel}>Parent Name</Text>
+                        <Text style={styles.subLabel}>Parent Id</Text>
                         <Text style={styles.subValue}>
-                          {student.parents?.name || "N/A"}
+                          {student.parents?.id || "N/A"}
                         </Text>
                       </View>
 
-                      <View style={styles.subInfoGroup}>
+                      {/* <View style={styles.subInfoGroup}>
                         <Text style={styles.subLabel}>Parent Email</Text>
                         <Text style={styles.subValue}>
-                          {student.parents?.email || "N/A"}
+                          {student.parents?.phone_number || "N/A"}
                         </Text>
-                      </View>
+                      </View> */}
                     </View>
                   ))}
               </ScrollView>
@@ -165,89 +177,139 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#f0f9ff",
+    backgroundColor: "#A7C7E7",
   },
   safeArea: {
     flex: 1,
-    backgroundColor: "#f0f9ff",
-  },
-  card: {
-    flex: 1,
-    backgroundColor: "#ffffff",
-    borderRadius: 12,
-    paddingLeft: 20,
-    paddingRight: 20,
-    paddingTop: 20,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
+    backgroundColor: "#A7C7E7",
   },
   container: {
     flex: 1,
     padding: 20,
-  },
-  title: {
-    fontSize: 28,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 20,
-    textAlign: "center",
-  },
-  searchInput: {
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 8,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 16,
-    fontSize: 16,
-    color: "#333",
-  },
-  studentList: {
-    flex: 1,
-  },
-  studentCard: {
-    marginBottom: 16,
-    padding: 14,
-    borderRadius: 10,
-    backgroundColor: "#ffffff",
-    borderWidth: 1,
-    borderColor: "#ccc",
-    elevation: 2,
-  },
-  studentTitle: {
-    fontSize: 20,
-    fontWeight: "bold",
-    color: "#004A7C",
-    marginBottom: 10,
-  },
-  subInfoGroup: {
-    marginBottom: 6,
-  },
-  subLabel: {
-    fontSize: 14,
-    fontWeight: "bold",
-    color: "#555",
-  },
-  subValue: {
-    fontSize: 15,
-    color: "#333",
+    alignItems: "center",
   },
 
+  // Back Button
   backButton: {
-    borderRadius: 12,
-    borderWidth: 2,
-    borderColor: "#004A7C",
-    elevation: 4,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    backgroundColor: "#F2E9E4",
+    paddingVertical: 10,
+    paddingHorizontal: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
     alignSelf: "flex-start",
-    backgroundColor: "#FFFFFF",
-    paddingVertical: 8,
-    paddingHorizontal: 14,
-    marginBottom: 20, // space below the button so card is pushed down
+    marginBottom: 20,
   },
   backButtonText: {
-    color: "#004A7C",
-    fontSize: 16,
+    fontSize: 18,
     fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
+
+  // Card
+  card: {
+    width: "100%",
+    backgroundColor: "#F2E9E4",
+    borderRadius: 20,
+    padding: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  title: {
+    fontSize: 32,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    textAlign: "center",
+    marginBottom: 20,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+
+  // Search Input
+  searchInput: {
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    borderRadius: 20,
+    paddingVertical: 14,
+    paddingHorizontal: 20,
+    fontSize: 20,
+    marginBottom: 16,
+    backgroundColor: "#ADC5CE",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 3,
+  },
+
+  // Empty State
+  emptyState: {
+    justifyContent: "center",
+    alignItems: "center",
+    padding: 20,
+  },
+  emptyImage: { width: 180, height: 180, marginBottom: 20 },
+  emptyText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    textAlign: "center",
+    marginBottom: 12,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  emptyButton: {
+    backgroundColor: "#1F3C88",
+    paddingVertical: 12,
+    paddingHorizontal: 28,
+    borderRadius: 20,
+    shadowColor: "#000",
+    shadowOffset: { width: 3, height: 3 },
+    shadowOpacity: 0.4,
+    shadowRadius: 4,
+  },
+  emptyButtonText: {
+    color: "#FFFACD",
+    fontSize: 20,
+    fontWeight: "bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+
+  // Student List
+  studentList: { marginTop: 10 },
+  studentCard: {
+    backgroundColor: "#ADC5CE",
+    padding: 18,
+    borderRadius: 20,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    marginBottom: 16,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.3,
+    shadowRadius: 4,
+  },
+  studentTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    marginBottom: 10,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  subInfoGroup: { marginBottom: 6 },
+  subLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  subValue: { fontSize: 18, color: "#1F3C88", fontFamily: "Courier" },
 });

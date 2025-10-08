@@ -53,7 +53,7 @@ export default function LoginScreen() {
         <View style={styles.card}>
           <Image
             source={{
-              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage//kumi-logo%20(1).png",
+              uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logo.png",
             }}
             style={styles.logo}
             resizeMode="contain"
@@ -126,14 +126,15 @@ const styles = StyleSheet.create({
     backgroundColor: "#ffffff",
     padding: 24,
     borderRadius: 12,
-    borderWidth: 1,
-    borderColor: "#004A7C",
     shadowColor: "#000",
-    shadowOpacity: 0.1,
+    shadowOpacity: 1,
     shadowOffset: { width: 0, height: 2 },
-    shadowRadius: 4,
+    shadowRadius: 12,
     elevation: 4,
     alignItems: "center",
+    width: "100%",
+    maxWidth: 400,
+    alignSelf: "center"
   },
   logo: {
     width: 100,
