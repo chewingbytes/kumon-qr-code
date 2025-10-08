@@ -20,6 +20,7 @@ import {
   Image,
   ImageBackground,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -38,6 +39,42 @@ export default function StudentListScreen() {
   const [csvFileName, setCsvFileName] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [manualSelect, setManualSelect] = useState(false); // track if user clicked
+
+  const [successNotifications, setSuccessNotifications] = useState<
+    { id: number; message: string }[]
+  >([]);
+
+  const sendWhatsappMessage = async (name: string) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        Alert.alert("Error", "No access token found. Please log in again.");
+        return;
+      }
+
+      const res = await postJSONWithBody(
+        "api/db/sendMessage",
+        { name },
+        accessToken
+      );
+      console.log("REESS:", res);
+
+      if (res === false) {
+        return false;
+      } else if (res === true) {
+        return true;
+      }
+    } catch (err) {
+      console.error("sendWhatsappMessage error:", err);
+      Alert.alert("Error", "Something went wrong while sending the message.");
+      return false;
+    }
+  };
 
   useEffect(() => {
     if (studentsDashboard.length > 0 && !manualSelect) {
@@ -114,6 +151,27 @@ export default function StudentListScreen() {
       setUploading(false);
       Alert.alert("Error", err.message);
     }
+  };
+
+  const postJSONWithBody = async (
+    path: string,
+    body: object,
+    accessToken: string
+  ) => {
+    console.log("querying:", path);
+    console.log("with body:", body);
+    console.log("querying th efucking shit:", API + path);
+    console.log("TEOKEN:", accessToken);
+    const res = await fetch(API + path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    return res.json();
   };
 
   const postJSON = async (path: string, accessToken: string) => {
@@ -220,6 +278,25 @@ export default function StudentListScreen() {
     }, [])
   );
 
+  let notificationId = 0; // outside component, or use useRef for persistent ID
+
+  const showSuccessNotification = (studentName: string, result: boolean) => {
+    const id = notificationId++;
+    const message =
+      result === true
+        ? `Message sent successfully to ${studentName}'s parents!`
+        : "An error occurred";
+
+    setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+    // auto-hide after 3 seconds
+    setTimeout(() => {
+      setSuccessNotifications((prev) =>
+        prev.filter((notif) => notif.id !== id)
+      );
+    }, 3000);
+  };
+
   const dashboardScrollRef = useRef<ScrollView>(null);
 
   useEffect(() => {
@@ -281,21 +358,66 @@ export default function StudentListScreen() {
                         setManualSelect(true);
                       }}
                     >
-                      <Text style={styles.cardTitle}>
-                        {entry.student_name || entry.students?.name}
-                      </Text>
-                      <Text
+                      <View>
+                        <Text
+                          style={[
+                            styles.cardTitle,
+                            selectedStudent?.id === entry.id &&
+                              styles.selectedUnderline,
+                          ]}
+                        >
+                          {entry.student_name}{" "}
+                          {entry.parent_notified && (
+                            <Text
+                              style={{
+                                marginLeft: 8,
+                                color: "green",
+                                fontSize: 18,
+                              }}
+                            >
+                              ✅
+                            </Text>
+                          )}
+                        </Text>
+
+                        <Text
+                          style={[
+                            styles.statusText,
+                            entry.status === "checked_in"
+                              ? styles.checkedIn
+                              : styles.checkedOut,
+                          ]}
+                        >
+                          {entry.status === "checked_in"
+                            ? "Checked In"
+                            : "Checked Out"}
+                        </Text>
+                      </View>
+
+                      <TouchableOpacity
                         style={[
-                          styles.statusText,
-                          entry.status === "checked_in"
-                            ? styles.checkedIn
-                            : styles.checkedOut,
+                          styles.button,
+                          { marginTop: 10, paddingVertical: 8 },
                         ]}
+                        onPress={async () => {
+                          const result = await sendWhatsappMessage(
+                            entry.student_name
+                          );
+                          if (result) {
+                            showSuccessNotification(entry.student_name, result);
+                            await fetchStudents(); // refresh dashboard to update parent_notified
+                          } else {
+                            Alert.alert(
+                              "Error",
+                              `Failed to send message to ${entry.student_name}'s parents.`
+                            );
+                          }
+                        }}
                       >
-                        {entry.status === "checked_in"
-                          ? "Checked In"
-                          : "Checked Out"}
-                      </Text>
+                        <Text style={styles.text}>
+                          {entry.parent_notified ? "Notify Again" : "Notify"}
+                        </Text>
+                      </TouchableOpacity>
                     </Pressable>
                   ))
               ) : (
@@ -304,6 +426,12 @@ export default function StudentListScreen() {
                 </SafeAreaView>
               )}
             </ScrollView>
+
+            <View style={styles.totalCountContainer}>
+              <Text style={styles.totalCountText}>
+                Total Students: {studentsDashboard.length}
+              </Text>
+            </View>
           </View>
 
           {/* Right Panel */}
@@ -352,6 +480,43 @@ export default function StudentListScreen() {
           </View>
         </View>
       </View>
+      <View
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 99999,
+        }}
+      >
+        {successNotifications.map((notif, index) => (
+          <Animated.View
+            key={index}
+            style={{
+              marginTop: index * 10, // stack them vertically
+              width: 280,
+              backgroundColor: "#D4EDDA",
+              borderColor: "#155724",
+              borderWidth: 2,
+              borderRadius: 12,
+              padding: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Courier-Bold",
+                color: "#155724",
+              }}
+            >
+              {notif.message}
+            </Text>
+          </Animated.View>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
@@ -361,7 +526,6 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
-    backgroundColor: "#A7C7E7",
   },
   safeArea: {
     flex: 1,
@@ -419,6 +583,9 @@ const styles = StyleSheet.create({
   },
 
   card: {
+    display: "flex",
+    justifyContent: "space-between",
+    flexDirection: "row",
     padding: 24,
     borderRadius: 16,
     marginBottom: 18,
@@ -631,11 +798,8 @@ const styles = StyleSheet.create({
   infoCard: {
     width: "100%",
     height: "100%",
-    padding: 24,
+    padding: 18,
     backgroundColor: "#FFF5E4",
-    borderRadius: 14,
-    borderWidth: 3,
-    borderColor: "#1F3C88",
   },
 
   infoTitle: {
@@ -643,7 +807,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 20,
-    textDecorationLine: "underline",
     fontFamily: "Courier-Bold",
   },
 
@@ -690,6 +853,40 @@ const styles = StyleSheet.create({
     color: "#FFF5E4",
     fontWeight: "bold",
     fontSize: 18,
+    fontFamily: "Courier-Bold",
+  },
+  selectedUnderline: {
+    textDecorationLine: "underline",
+    textDecorationColor: "#004A7C", // choose your color
+    textDecorationStyle: "solid",
+  },
+
+  button: {
+    backgroundColor: "#33B5E5",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
+  },
+
+  totalCountContainer: {
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderColor: "#1F3C88",
+    marginTop: 8,
+    alignItems: "flex-start",
+  },
+
+  totalCountText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F3C88",
     fontFamily: "Courier-Bold",
   },
 });

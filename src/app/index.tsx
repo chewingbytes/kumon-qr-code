@@ -20,6 +20,7 @@ import {
   Image,
   ImageBackground,
   ActivityIndicator,
+  Animated,
 } from "react-native";
 import { useFocusEffect } from "@react-navigation/native";
 import { router } from "expo-router";
@@ -30,6 +31,11 @@ export default function HomeScreen() {
   const [dropdownVisible, setDropdownVisible] = useState(false);
   const [studentName, setStudentName] = useState("");
   const [parentNumber, setParentNumber] = useState("");
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [successNotifications, setSuccessNotifications] = useState<
+    { id: number; message: string }[]
+  >([]);
+  const [loading, setLoading] = useState(false);
   const [studentsDashboard, setStudentsDashboard] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [students, setStudents] = useState([]);
@@ -127,6 +133,27 @@ export default function HomeScreen() {
     return res.json();
   };
 
+  const postJSONWithBody = async (
+    path: string,
+    body: object,
+    accessToken: string
+  ) => {
+    console.log("querying:", path);
+    console.log("with body:", body);
+    console.log("querying th efucking shit:", API + path);
+    console.log("TEOKEN:", accessToken);
+    const res = await fetch(API + path, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${accessToken}`,
+      },
+      body: JSON.stringify(body),
+    });
+
+    return res.json();
+  };
+
   const fetchStudents = async () => {
     try {
       const {
@@ -150,7 +177,56 @@ export default function HomeScreen() {
     }
   };
 
-  const startScan = () => router.push("scanner");
+  let notificationId = 0; // outside component, or use useRef for persistent ID
+
+  const showSuccessNotification = (studentName: string, result: boolean) => {
+    const id = notificationId++;
+    const message =
+      result === true
+        ? `Message sent successfully to ${studentName}'s parents!`
+        : "An error occurred";
+
+    setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+    // auto-hide after 3 seconds
+    setTimeout(() => {
+      setSuccessNotifications((prev) =>
+        prev.filter((notif) => notif.id !== id)
+      );
+    }, 3000);
+  };
+
+  const sendWhatsappMessage = async (name: string) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+
+      const accessToken = session?.access_token;
+
+      if (!accessToken) {
+        Alert.alert("Error", "No access token found. Please log in again.");
+        return;
+      }
+
+      const res = await postJSONWithBody(
+        "api/db/sendMessage",
+        { name },
+        accessToken
+      );
+      console.log("REESS:", res);
+
+      if (res === false) {
+        return false;
+      } else if (res === true) {
+        return true;
+      }
+    } catch (err) {
+      console.error("sendWhatsappMessage error:", err);
+      Alert.alert("Error", "Something went wrong while sending the message.");
+      return false;
+    }
+  };
 
   const addStudent = () => {
     const name = studentName.trim();
@@ -230,193 +306,315 @@ export default function HomeScreen() {
 
   return (
     <SafeAreaView style={styles.container}>
-      {/* Hamburger Menu */}
-      <TouchableOpacity
-        style={styles.menuButton}
-        onPress={() => setDropdownVisible(!dropdownVisible)}
-      >
-        <Text style={styles.hamburgerIcon}>☰</Text>
-      </TouchableOpacity>
+      <View style={styles.rowLayout}>
+        <View style={styles.leftList}>
+          <Text style={[styles.infoTitle, { fontSize: 22 }]}>Student List</Text>
+          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            {loading ? (
+              <Text style={styles.noDataText}>Refreshing...</Text>
+            ) : studentsDashboard && studentsDashboard.length > 0 ? (
+              studentsDashboard.map((entry, idx) => (
+                <View
+                  key={idx}
+                  style={[
+                    styles.miniCard,
+                    entry.status === "checked_in" ? styles.in : styles.out,
+                  ]}
+                >
+                  {/* Student Name with tick */}
+                  <Text style={styles.miniCardName}>
+                    {entry.student_name}{" "}
+                    {entry.parent_notified && (
+                      <Text
+                        style={{
+                          marginLeft: 8,
+                          color: "green",
+                          fontSize: 18,
+                        }}
+                      >
+                        ✅
+                      </Text>
+                    )}
+                  </Text>
 
-      {/* Center Content */}
-      <View style={styles.centerContent}>
-        <Image
-          source={{
-            uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logo.png",
-          }}
-          style={styles.logo}
-        />
-        <Text style={styles.welcomeText}>Welcome to Kumon Punggol Plaza</Text>
+                  {/* Status */}
+                  <Text
+                    style={[
+                      styles.statusText,
+                      entry.status === "checked_in"
+                        ? styles.checkedIn
+                        : styles.checkedOut,
+                    ]}
+                  >
+                    {entry.status === "checked_in"
+                      ? "Checked In"
+                      : "Checked Out"}
+                  </Text>
 
-        <TouchableOpacity
-          style={styles.scanButton}
-          onPress={() => router.push("/scanner")}
-        >
-          <Text style={styles.scanText}>Scan QR Code</Text>
-        </TouchableOpacity>
-      </View>
-      {dropdownVisible && (
-        <View style={styles.dropdownMenu}>
-          <Pressable onPress={() => router.push("/profile")}>
-            <Text style={styles.dropdownItem}>My Profile</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/my-students")}>
-            <Text style={styles.dropdownItem}>My Students</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setModalVisible(true);
-              setDropdownVisible(false);
-            }}
-          >
-            <Text style={styles.dropdownItem}>Add Students</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              Alert.alert(
-                "Are you sure?",
-                "This will finish the day and email the attendance Excel report.",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Yes, proceed",
-                    onPress: () => finishDay(),
-                  },
-                ]
-              );
-              setDropdownVisible(false);
-            }}
-          >
-            <Text style={styles.dropdownItem}>Finish the Day</Text>
-          </Pressable>
+                  {/* Notify / Notify Again Button */}
+                  <TouchableOpacity
+                    style={[
+                      styles.button,
+                      { marginTop: 10, paddingVertical: 8 },
+                    ]}
+                    onPress={async () => {
+                      const result = await sendWhatsappMessage(
+                        entry.student_name
+                      );
+                      if (result) {
+                        showSuccessNotification(entry.student_name, result);
+                        await fetchStudents(); // refresh dashboard to update parent_notified
+                      } else {
+                        Alert.alert(
+                          "Error",
+                          `Failed to send message to ${entry.student_name}'s parents.`
+                        );
+                      }
+                    }}
+                  >
+                    <Text style={styles.text}>
+                      {entry.parent_notified ? "Notify Again" : "Notify"}
+                    </Text>
+                  </TouchableOpacity>
+                </View>
+              ))
+            ) : (
+              <SafeAreaView style={styles.loadingSafeArea}>
+                <ActivityIndicator size="large" color="#004A7C" />
+              </SafeAreaView>
+            )}
+          </ScrollView>
         </View>
-      )}
 
-      {/* Modal */}
-      <Modal visible={modalVisible} animationType="slide">
-        <SafeAreaView style={styles.modalContainer}>
-          {/* Header */}
-          <View style={styles.modalHeader}>
-            <Text style={styles.modalTitle}>Add Students</Text>
-            <TouchableOpacity
-              onPress={() => setModalVisible(false)}
-              style={styles.modalCloseBtn}
-            >
-              <Text style={styles.modalCloseText}>✕</Text>
-            </TouchableOpacity>
+        {/* Hamburger Menu */}
+        <View style={styles.rightContent}>
+          <TouchableOpacity
+            style={styles.menuButton}
+            onPress={() => setDropdownVisible(!dropdownVisible)}
+          >
+            <Text style={styles.hamburgerIcon}>☰</Text>
+          </TouchableOpacity>
+
+          {/* Center Content */}
+          <View style={styles.centerContent}>
+            <Image
+              source={{
+                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/kumon-vector-logo.png",
+              }}
+              style={styles.logo}
+            />
+            <Text style={styles.welcomeText}>
+              Welcome to Kumon Punggol Plaza
+            </Text>
           </View>
 
-          {/* Content */}
-          <ScrollView contentContainerStyle={styles.modalContent}>
-            <TextInput
-              style={styles.input}
-              placeholder="Student Name"
-              value={studentName}
-              onChangeText={setStudentName}
-              placeholderTextColor="#1F3C88"
-            />
-            <TextInput
-              style={styles.input}
-              placeholder="Parent's Number"
-              value={parentNumber}
-              onChangeText={setParentNumber}
-              placeholderTextColor="#1F3C88"
-            />
-
-            <Pressable style={styles.addButton} onPress={addStudent}>
-              <Text style={styles.addButtonText}>Add</Text>
-            </Pressable>
-
-            {/* Students List */}
-            {students.length > 0 &&
-              students.map((s, i) => (
-                <View key={i} style={styles.studentItem}>
-                  <View style={styles.studentRow}>
-                    <View>
-                      <Text style={styles.studentName}>{s.name}</Text>
-                      <Text style={styles.studentParentLabel}>
-                        Number: {s.parentNumber}
-                      </Text>
-                    </View>
-                    <TouchableOpacity
-                      style={styles.removeButton}
-                      onPress={() =>
-                        setStudents((prev) =>
-                          prev.filter((_, idx) => idx !== i)
-                        )
-                      }
-                    >
-                      <Text style={styles.removeButtonText}>✕</Text>
-                    </TouchableOpacity>
-                  </View>
-                </View>
-              ))}
-
-            {/* CSV & Submit Buttons */}
-            <View style={styles.buttonRow}>
-              <Pressable
-                style={[styles.uploadCSVButton, { flex: 1 }]}
-                onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
-                disabled={uploading}
-              >
-                <Text style={styles.uploadCsvText}>
-                  {uploading
-                    ? "Uploading..."
-                    : pickedCSV
-                    ? `Upload: ${csvFileName}`
-                    : "Import CSV"}
-                </Text>
+          <TouchableOpacity
+            style={styles.scanButton}
+            onPress={() => router.push("/scanner")}
+          >
+            <Text style={styles.scanText}>Scan QR Code</Text>
+          </TouchableOpacity>
+          {dropdownVisible && (
+            <View style={styles.dropdownMenu}>
+              <Pressable onPress={() => router.push("/profile")}>
+                <Text style={styles.dropdownItem}>My Profile</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push("/my-students")}>
+                <Text style={styles.dropdownItem}>My Students</Text>
               </Pressable>
               <Pressable
-                style={[styles.primaryButton, { flex: 1 }]}
-                onPress={submitStudents}
+                onPress={() => {
+                  setModalVisible(true);
+                  setDropdownVisible(false);
+                }}
               >
-                <Text style={styles.primaryButtonText}>Submit</Text>
+                <Text style={styles.dropdownItem}>Add Students</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    "Are you sure?",
+                    "This will finish the day and email the attendance Excel report.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Yes, proceed",
+                        onPress: () => finishDay(),
+                      },
+                    ]
+                  );
+                  setDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.dropdownItem}>Finish the Day</Text>
               </Pressable>
             </View>
-          </ScrollView>
-        </SafeAreaView>
-      </Modal>
+          )}
 
-      {dropdownVisible && (
-        <View style={styles.dropdownMenu}>
-          <Pressable onPress={() => router.push("/student-list")}>
-            <Text style={styles.dropdownItem}>Student List</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/profile")}>
-            <Text style={styles.dropdownItem}>My Profile</Text>
-          </Pressable>
-          <Pressable onPress={() => router.push("/my-students")}>
-            <Text style={styles.dropdownItem}>My Students</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              setModalVisible(true);
-              setDropdownVisible(false);
-            }}
-          >
-            <Text style={styles.dropdownItem}>Add Students</Text>
-          </Pressable>
-          <Pressable
-            onPress={() => {
-              Alert.alert(
-                "Are you sure?",
-                "This will finish the day and email the attendance Excel report.",
-                [
-                  { text: "Cancel", style: "cancel" },
-                  {
-                    text: "Yes, proceed",
-                    onPress: () => finishDay(),
-                  },
-                ]
-              );
-              setDropdownVisible(false);
-            }}
-          >
-            <Text style={styles.dropdownItem}>Finish the Day</Text>
-          </Pressable>
+          {/* Modal */}
+          <Modal visible={modalVisible} animationType="slide">
+            <SafeAreaView style={styles.modalContainer}>
+              {/* Header */}
+              <View style={styles.modalHeader}>
+                <Text style={styles.modalTitle}>Add Students</Text>
+                <TouchableOpacity
+                  onPress={() => setModalVisible(false)}
+                  style={styles.modalCloseBtn}
+                >
+                  <Text style={styles.modalCloseText}>✕</Text>
+                </TouchableOpacity>
+              </View>
+
+              {/* Content */}
+              <ScrollView contentContainerStyle={styles.modalContent}>
+                <TextInput
+                  style={styles.input}
+                  placeholder="Student Name"
+                  value={studentName}
+                  onChangeText={setStudentName}
+                  placeholderTextColor="#1F3C88"
+                />
+                <TextInput
+                  style={styles.input}
+                  placeholder="Parent's Number"
+                  value={parentNumber}
+                  onChangeText={setParentNumber}
+                  placeholderTextColor="#1F3C88"
+                />
+
+                <Pressable style={styles.addButton} onPress={addStudent}>
+                  <Text style={styles.addButtonText}>Add</Text>
+                </Pressable>
+
+                {/* Students List */}
+                {students.length > 0 &&
+                  students.map((s, i) => (
+                    <View key={i} style={styles.studentItem}>
+                      <View style={styles.studentRow}>
+                        <View>
+                          <Text style={styles.studentName}>{s.name}</Text>
+                          <Text style={styles.studentParentLabel}>
+                            Number: {s.parentNumber}
+                          </Text>
+                        </View>
+                        <TouchableOpacity
+                          style={styles.removeButton}
+                          onPress={() =>
+                            setStudents((prev) =>
+                              prev.filter((_, idx) => idx !== i)
+                            )
+                          }
+                        >
+                          <Text style={styles.removeButtonText}>✕</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </View>
+                  ))}
+
+                {/* CSV & Submit Buttons */}
+                <View style={styles.buttonRow}>
+                  <Pressable
+                    style={[styles.uploadCSVButton, { flex: 1 }]}
+                    onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
+                    disabled={uploading}
+                  >
+                    <Text style={styles.uploadCsvText}>
+                      {uploading
+                        ? "Uploading..."
+                        : pickedCSV
+                        ? `Upload: ${csvFileName}`
+                        : "Import CSV"}
+                    </Text>
+                  </Pressable>
+                  <Pressable
+                    style={[styles.primaryButton, { flex: 1 }]}
+                    onPress={submitStudents}
+                  >
+                    <Text style={styles.primaryButtonText}>Submit</Text>
+                  </Pressable>
+                </View>
+              </ScrollView>
+            </SafeAreaView>
+          </Modal>
+
+          {dropdownVisible && (
+            <View style={styles.dropdownMenu}>
+              <Pressable onPress={() => router.push("/student-list")}>
+                <Text style={styles.dropdownItem}>Student List</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push("/profile")}>
+                <Text style={styles.dropdownItem}>My Profile</Text>
+              </Pressable>
+              <Pressable onPress={() => router.push("/my-students")}>
+                <Text style={styles.dropdownItem}>My Students</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  setModalVisible(true);
+                  setDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.dropdownItem}>Add Students</Text>
+              </Pressable>
+              <Pressable
+                onPress={() => {
+                  Alert.alert(
+                    "Are you sure?",
+                    "This will finish the day and email the attendance Excel report.",
+                    [
+                      { text: "Cancel", style: "cancel" },
+                      {
+                        text: "Yes, proceed",
+                        onPress: () => finishDay(),
+                      },
+                    ]
+                  );
+                  setDropdownVisible(false);
+                }}
+              >
+                <Text style={styles.dropdownItem}>Finish the Day</Text>
+              </Pressable>
+            </View>
+          )}
         </View>
-      )}
+      </View>
+      <View
+        style={{
+          position: "absolute",
+          top: 20,
+          right: 20,
+          zIndex: 99999,
+        }}
+      >
+        {successNotifications.map((notif, index) => (
+          <Animated.View
+            key={index}
+            style={{
+              marginTop: index * 10, // stack them vertically
+              width: 280,
+              backgroundColor: "#D4EDDA",
+              borderColor: "#155724",
+              borderWidth: 2,
+              borderRadius: 12,
+              padding: 16,
+              shadowColor: "#000",
+              shadowOffset: { width: 2, height: 2 },
+              shadowOpacity: 0.3,
+              shadowRadius: 4,
+            }}
+          >
+            <Text
+              style={{
+                fontSize: 18,
+                fontFamily: "Courier-Bold",
+                color: "#155724",
+              }}
+            >
+              {notif.message}
+            </Text>
+          </Animated.View>
+        ))}
+      </View>
     </SafeAreaView>
   );
 }
@@ -437,14 +635,14 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dropdownItem: {
-    paddingVertical: 10,
-    fontSize: 16,
+    paddingVertical: 15,
+    fontSize: 25,
     color: "#004A7C",
   },
 
   dropdownMenu: {
     position: "absolute",
-    top: 50,
+    top: 60,
     right: 30,
     backgroundColor: "#ffffff",
     borderRadius: 12,
@@ -477,27 +675,26 @@ const styles = StyleSheet.create({
     justifyContent: "center",
   },
   logo: {
-    width: 150,
-    height: 150,
-    borderRadius: 75,
-    borderWidth: 3,
+    width: 350,
+    height: 350,
+    borderRadius: 300,
     borderColor: "#1F3C88",
     backgroundColor: "#EAF0FA",
   },
   welcomeText: {
-    fontSize: 24,
+    fontSize: 50,
     marginTop: 20,
     fontFamily: "Pacifico-Regular", // or Dancing Script / Great Vibes
     color: "#1F3C88",
     textAlign: "center",
   },
   scanButton: {
-    marginTop: 30,
+    marginTop: 50,
     backgroundColor: "#F2E9E4",
-    paddingVertical: 12,
-    paddingHorizontal: 35,
-    borderRadius: 30,
-    borderWidth: 2,
+    width: "90%",
+    paddingVertical: 150,
+    borderRadius: 50,
+    borderWidth: 4,
     borderColor: "#1F3C88",
     shadowColor: "#000",
     shadowOffset: { width: 0, height: 3 },
@@ -505,10 +702,11 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   scanText: {
-    fontSize: 18,
+    fontSize: 25,
     color: "#1F3C88",
     fontWeight: "600",
     letterSpacing: 1,
+    textAlign: "center",
   },
 
   modalContainer: {
@@ -666,5 +864,156 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontFamily: "Pacifico-Regular",
     fontSize: 18,
+  },
+  rowLayout: {
+    flexDirection: "row",
+    flex: 1,
+    borderWidth: 4,
+    width: "100%",
+  },
+
+  leftList: {
+    width: "25%",
+    backgroundColor: "#F2E9E4",
+    borderRightWidth: 4,
+    borderColor: "#1F3C88",
+    padding: 20,
+    justifyContent: "flex-start",
+  },
+
+  listTitle: {
+    fontSize: 26,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
+    marginBottom: 20,
+    textAlign: "left",
+  },
+
+  listItem: {
+    backgroundColor: "#FFFACD",
+    borderRadius: 16,
+    borderWidth: 3,
+    borderColor: "#1F3C88",
+    padding: 12,
+    marginBottom: 12,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 3,
+  },
+
+  listName: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Pacifico-Regular",
+  },
+
+  listNumber: {
+    fontSize: 16,
+    color: "#1F3C88",
+    fontFamily: "Courier",
+  },
+
+  noStudents: {
+    color: "#1F3C88",
+    fontSize: 18,
+    textAlign: "left",
+    marginTop: 20,
+    fontFamily: "Courier",
+  },
+
+  rightContent: {
+    width: "75%",
+    alignItems: "center",
+    justifyContent: "center",
+    backgroundColor: "#A7C7E7", // matches your base color
+    position: "relative",
+  },
+  infoTitle: {
+    fontSize: 28,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    marginBottom: 20,
+    fontFamily: "Courier-Bold",
+  },
+
+  infoLabel: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Courier",
+  },
+
+  infoValue: {
+    fontSize: 22,
+    color: "#1F3C88",
+    fontFamily: "Courier",
+  },
+
+  noDataText: {
+    fontSize: 18,
+    color: "#1F3C88",
+    marginTop: 20,
+    fontFamily: "Courier",
+  },
+
+  statusText: {
+    fontSize: 16,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "Courier",
+  },
+
+  checkedIn: { color: "#59C1BD" },
+  checkedOut: { color: "#C147E9" },
+
+  in: {
+    backgroundColor: "#CFF5E7",
+    borderColor: "#59C1BD",
+  },
+
+  out: {
+    backgroundColor: "#F7C8E0",
+    borderColor: "#C147E9",
+  },
+
+  miniCard: {
+    padding: 16,
+    borderRadius: 10,
+    marginBottom: 12,
+    borderWidth: 2,
+    shadowColor: "#000",
+    shadowOffset: { width: 2, height: 2 },
+    shadowOpacity: 0.2,
+    shadowRadius: 3,
+    backgroundColor: "#FFF5E4",
+    borderColor: "#1F3C88",
+  },
+  miniCardName: {
+    fontWeight: "bold",
+    fontSize: 18,
+    color: "#3B185F",
+    fontFamily: "Courier-Bold",
+  },
+
+  button: {
+    backgroundColor: "#33B5E5",
+    paddingVertical: 14,
+    paddingHorizontal: 32,
+    borderRadius: 30,
+    elevation: 5,
+  },
+  text: {
+    fontSize: 18,
+    fontWeight: "bold",
+    color: "#fff",
+    textAlign: "center",
+  },
+  loadingSafeArea: {
+    flex: 1,
+    justifyContent: "center",
+    alignItems: "center",
   },
 });

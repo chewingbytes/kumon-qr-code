@@ -1,7 +1,7 @@
 import Constants from "expo-constants";
 import { createAudioPlayer, useAudioPlayer } from "expo-audio";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
-import { useRef } from "react";
+import { useCallback, useRef } from "react";
 import { useState, useEffect } from "react";
 import {
   Dimensions,
@@ -10,6 +10,7 @@ import {
   TouchableOpacity,
   Animated,
   Pressable,
+  ScrollView,
 } from "react-native";
 import { Camera, CameraView, CameraType } from "expo-camera";
 import { router } from "expo-router";
@@ -38,6 +39,7 @@ const postJSON = async (path: string, body: object, accessToken: string) => {
     },
     body: JSON.stringify(body),
   });
+
   return res.json();
 };
 
@@ -76,17 +78,35 @@ const QRScanner: React.FC = () => {
 
   const lastScannedTimeStampRef = useRef(0);
 
-  const [notification, setNotification] = useState<{
-    visible: boolean;
-    studentName?: string;
-  }>({ visible: false });
-  const slideAnim = useRef(new Animated.Value(300)).current; // Off-screen initially
+  // const fetchStudents = useCallback(async () => {
+  //   try {
+  //     setLoading(true);
 
-  const [successNotification, setSuccessNotification] = useState<{
-    visible: boolean;
-    message?: string;
-  }>({ visible: false });
-  const successSlideAnim = useRef(new Animated.Value(300)).current; // off-screen left
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
+
+  //     const accessToken = session?.access_token;
+
+  //     const res = await fetch(API + "api/db/students", {
+  //       method: "GET",
+  //       headers: {
+  //         "Content-Type": "application/json",
+  //         Authorization: `Bearer ${accessToken}`,
+  //       },
+  //     });
+
+  //     const json = await res.json();
+  //     if (json.error) throw new Error(json.error);
+
+  //     console.log("✅ Refreshed students:", json.students);
+  //     setStudentsDashboard(json.students);
+  //   } catch (error: any) {
+  //     console.error("Error fetching students:", error.message);
+  //   } finally {
+  //     setLoading(false);
+  //   }
+  // }, []);
 
   function toggleCameraFacing() {
     setFacing((current) => (current === "back" ? "front" : "back"));
@@ -103,14 +123,6 @@ const QRScanner: React.FC = () => {
 
     requestPermissions();
   }, []);
-
-  useEffect(() => {
-    console.log("NOTIICIAITI:", notification);
-  }, [notification]);
-
-  useEffect(() => {
-    console.log("suceNOTIICIAITI:", successNotification);
-  }, [successNotification]);
 
   useEffect(() => {
     if (hasCameraPermission !== null && hasAudioPermission !== null) {
@@ -134,51 +146,33 @@ const QRScanner: React.FC = () => {
     }
   }, [hasCameraPermission, hasAudioPermission]);
 
-  const sendWhatsappMessage = async (name: string) => {
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
+  // const sendWhatsappMessage = async (name: string) => {
+  //   try {
+  //     const {
+  //       data: { session },
+  //     } = await supabase.auth.getSession();
 
-      const accessToken = session?.access_token;
+  //     const accessToken = session?.access_token;
 
-      if (!accessToken) {
-        Alert.alert("Error", "No access token found. Please log in again.");
-        return;
-      }
+  //     if (!accessToken) {
+  //       Alert.alert("Error", "No access token found. Please log in again.");
+  //       return;
+  //     }
 
-      const res = await postJSON("api/db/sendMessage", { name }, accessToken);
+  //     const res = await postJSON("api/db/sendMessage", { name }, accessToken);
+  //     console.log("REESS:", res);
 
-      if (res.error) {
-        Alert.alert("Error", `Failed to send message: ${res.error}`);
-      } else {
-        // Optional: show success notification
-        setSuccessNotification({
-          visible: true,
-          message: `Message sent successfully to ${name}'s parents!`,
-        });
-
-        // Slide-in animation for notification
-        Animated.timing(successSlideAnim, {
-          toValue: 0,
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-
-        // Auto-hide after 5 seconds
-        setTimeout(() => {
-          Animated.timing(successSlideAnim, {
-            toValue: 300,
-            duration: 300,
-            useNativeDriver: true,
-          }).start(() => setSuccessNotification({ visible: false }));
-        }, 5000);
-      }
-    } catch (err) {
-      console.error("sendWhatsappMessage error:", err);
-      Alert.alert("Error", "Something went wrong while sending the message.");
-    }
-  };
+  //     if (res === false) {
+  //       return false;
+  //     } else if (res === true) {
+  //       return true;
+  //     }
+  //   } catch (err) {
+  //     console.error("sendWhatsappMessage error:", err);
+  //     Alert.alert("Error", "Something went wrong while sending the message.");
+  //     return false;
+  //   }
+  // };
 
   const handleCheckOut = async (name: string) => {
     console.log("CHEKCING OUT NAME:", name);
@@ -192,27 +186,6 @@ const QRScanner: React.FC = () => {
 
     if (error) {
       Alert.alert("Error", error);
-    } else {
-      // Show success notification
-      // setSuccessNotification({
-      //   visible: true,
-      //   message: `${name} checked out successfully!`,
-      // });
-      // // Animate slide in
-      // Animated.timing(successSlideAnim, {
-      //   toValue: 0,
-      //   duration: 300,
-      //   useNativeDriver: true,
-      // }).start(() => {
-      //   // Hide after 3 seconds
-      //   setTimeout(() => {
-      //     Animated.timing(successSlideAnim, {
-      //       toValue: -300,
-      //       duration: 300,
-      //       useNativeDriver: true,
-      //     }).start(() => setSuccessNotification({ visible: false }));
-      //   }, 3000);
-      // });
     }
   };
 
@@ -225,7 +198,9 @@ const QRScanner: React.FC = () => {
     const accessToken = session?.access_token;
 
     const { error } = await postJSON("api/db/checkin", { name }, accessToken);
-    if (error) Alert.alert("Error", error);
+    if (error) {
+      Alert.alert("Error", error);
+    }
   };
 
   const handleBarCodeScanned = async ({ data }) => {
@@ -282,17 +257,6 @@ const QRScanner: React.FC = () => {
       } else {
         console.log("HANDLING CHCKOUT WITH NAME:", name);
         handleCheckOut(name);
-        setNotification({ visible: true, studentName: name });
-
-        Animated.timing(slideAnim, {
-          toValue: 0, // slide in
-          duration: 300,
-          useNativeDriver: true,
-        }).start();
-
-        setTimeout(() => {
-          hideNotification();
-        }, 10000);
       }
     } catch (error) {
       console.error("error:", error);
@@ -305,25 +269,24 @@ const QRScanner: React.FC = () => {
     }
   };
 
-  const hideNotification = () => {
-    Animated.timing(slideAnim, {
-      toValue: 300, // slide out
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setNotification({ visible: false });
-    });
-  };
+  // let notificationId = 0; // outside component, or use useRef for persistent ID
 
-  const hideSuccessNotification = () => {
-    Animated.timing(successSlideAnim, {
-      toValue: 300, // slide out
-      duration: 300,
-      useNativeDriver: true,
-    }).start(() => {
-      setSuccessNotification({ visible: false });
-    });
-  };
+  // const showSuccessNotification = (studentName: string, result: boolean) => {
+  //   const id = notificationId++;
+  //   const message =
+  //     result === true
+  //       ? `Message sent successfully to ${studentName}'s parents!`
+  //       : "An error occurred";
+
+  //   setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+  //   // auto-hide after 3 seconds
+  //   setTimeout(() => {
+  //     setSuccessNotifications((prev) =>
+  //       prev.filter((notif) => notif.id !== id)
+  //     );
+  //   }, 3000);
+  // };
 
   const goToSettings = () => {
     Linking.openSettings();
@@ -331,29 +294,46 @@ const QRScanner: React.FC = () => {
 
   if (hasCameraPermission && hasAudioPermission) {
     return (
-      <>
-        <CameraView
-          ref={cameraRef}
-          facing={facing}
-          onBarcodeScanned={handleBarCodeScanned}
-          animateShutter={true}
-          barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
-          style={{ height: Dimensions.get("window").height }}
-        >
+      <View style={{ flexDirection: "row", flex: 1 }}>
+        {/* 📷 Left side - Camera area */}
+        <View style={{ width: "100%", height: "100%" }}>
+          <CameraView
+            ref={cameraRef}
+            style={{ width: "100%", height: "100%", borderRadius: 16 }}
+            facing={facing}
+            onBarcodeScanned={handleBarCodeScanned}
+            animateShutter
+            barcodeScannerSettings={{ barcodeTypes: ["qr"] }}
+          />
+
+          {/* ✅ Overlay UI */}
           {successMessage && (
-            <View style={styles.popup}>
+            <View
+              style={[
+                styles.popup,
+                { position: "absolute", top: "70%", alignSelf: "center" },
+              ]}
+            >
               <Text style={styles.popupText}>{successMessage}</Text>
             </View>
           )}
 
           <TouchableOpacity
-            style={styles.backButton}
+            style={[
+              styles.backButton,
+              { position: "absolute", top: 20, left: 20 },
+            ]}
             onPress={() => router.push("/")}
           >
             <Text style={styles.backButtonText}>⬅ Back</Text>
           </TouchableOpacity>
 
-          <View style={styles.buttonContainer}>
+          <View
+            style={[
+              styles.buttonContainer,
+              { position: "absolute", bottom: 40, alignSelf: "center" },
+            ]}
+          >
             <TouchableOpacity
               style={styles.button}
               onPress={toggleCameraFacing}
@@ -361,75 +341,8 @@ const QRScanner: React.FC = () => {
               <Text style={styles.text}>Flip Camera</Text>
             </TouchableOpacity>
           </View>
-        </CameraView>
-
-        {notification.visible && (
-          <Animated.View
-            style={[
-              styles.notification,
-              { transform: [{ translateX: slideAnim }] },
-            ]}
-          >
-            <Text style={styles.notificationText}>
-              Notify {notification.studentName}'s parents?
-            </Text>
-            <View
-              style={{
-                flexDirection: "row",
-                justifyContent: "flex-end",
-                gap: 10,
-              }}
-            >
-              <Pressable
-                onPress={async () => {
-                  if (notification.studentName) {
-                    await sendWhatsappMessage(notification.studentName);
-                  }
-                  hideNotification();
-                }}
-                style={styles.yesButton}
-              >
-                <Text style={styles.yesText}>Yes</Text>
-              </Pressable>
-              <Pressable onPress={hideNotification} style={styles.noButton}>
-                <Text style={styles.noText}>No</Text>
-              </Pressable>
-            </View>
-          </Animated.View>
-        )}
-
-        {successNotification.visible && (
-          <Animated.View
-            style={{
-              position: "absolute",
-              top: 20,
-              right: 20,
-              width: 280,
-              backgroundColor: "#D4EDDA",
-              borderColor: "#155724",
-              borderWidth: 2,
-              borderRadius: 12,
-              padding: 16,
-              shadowColor: "#000",
-              shadowOffset: { width: 2, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-              transform: [{ translateX: successSlideAnim }],
-              zIndex: 99999,
-            }}
-          >
-            <Text
-              style={{
-                fontSize: 18,
-                fontFamily: "Courier-Bold",
-                color: "#155724",
-              }}
-            >
-              {successNotification.message}
-            </Text>
-          </Animated.View>
-        )}
-      </>
+        </View>
+      </View>
     );
   }
 };
@@ -464,7 +377,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 20,
   },
   button: {
-    backgroundColor: "#33C1FF", // Kumon Red
+    backgroundColor: "#33B5E5",
     paddingVertical: 14,
     paddingHorizontal: 32,
     borderRadius: 30,
@@ -492,48 +405,6 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     textAlign: "center",
   },
-
-  notification: {
-    position: "absolute",
-    top: 20,
-    right: 20,
-    width: 280,
-    backgroundColor: "#FFF5E4",
-    borderColor: "#1F3C88",
-    borderWidth: 2,
-    borderRadius: 12,
-    padding: 16,
-    shadowColor: "#000",
-    shadowOffset: { width: 2, height: 2 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
-    zIndex: 99999,
-  },
-
-  notificationText: {
-    fontSize: 18,
-    fontFamily: "Courier-Bold",
-    color: "#1F3C88",
-    marginBottom: 12,
-  },
-
-  yesButton: {
-    backgroundColor: "#004A7C",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-
-  yesText: { color: "#FFFACD", fontFamily: "Courier-Bold" },
-
-  noButton: {
-    backgroundColor: "#FEC260",
-    paddingVertical: 8,
-    paddingHorizontal: 16,
-    borderRadius: 8,
-  },
-
-  noText: { color: "#3B185F", fontFamily: "Courier-Bold" },
 });
 
 export default QRScanner;
