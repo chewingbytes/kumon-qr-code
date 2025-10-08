@@ -61,6 +61,10 @@ interface QRData {
 const QRScanner: React.FC = () => {
   const player = useAudioPlayer(audioSource);
 
+  const [animationText, setAnimationText] = useState<string | null>(null);
+  const fadeAnim = useRef(new Animated.Value(0)).current;
+  const scaleAnim = useRef(new Animated.Value(0.8)).current;
+
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
 
   const [hasCameraPermission, setCameraPermission] = useState<boolean | null>(
@@ -146,6 +150,37 @@ const QRScanner: React.FC = () => {
     }
   }, [hasCameraPermission, hasAudioPermission]);
 
+  const showFullScreenAnimation = (text: string) => {
+    setAnimationText(text);
+
+    // Reset animation
+    fadeAnim.setValue(0);
+    scaleAnim.setValue(0.8);
+
+    // Animate in
+    Animated.parallel([
+      Animated.timing(fadeAnim, {
+        toValue: 1,
+        duration: 400,
+        useNativeDriver: true,
+      }),
+      Animated.spring(scaleAnim, {
+        toValue: 1,
+        friction: 5,
+        useNativeDriver: true,
+      }),
+    ]).start();
+
+    // Animate out after 2 seconds
+    setTimeout(() => {
+      Animated.timing(fadeAnim, {
+        toValue: 0,
+        duration: 500,
+        useNativeDriver: true,
+      }).start(() => setAnimationText(null));
+    }, 1000);
+  };
+
   // const sendWhatsappMessage = async (name: string) => {
   //   try {
   //     const {
@@ -175,6 +210,7 @@ const QRScanner: React.FC = () => {
   // };
 
   const handleCheckOut = async (name: string) => {
+    showFullScreenAnimation(`Bye, ${name}!`);
     console.log("CHEKCING OUT NAME:", name);
     const {
       data: { session },
@@ -190,7 +226,7 @@ const QRScanner: React.FC = () => {
   };
 
   const handleCheckIn = async (name: string) => {
-    router.push("/");
+    showFullScreenAnimation(`Welcome, ${name}!`);
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -295,6 +331,20 @@ const QRScanner: React.FC = () => {
   if (hasCameraPermission && hasAudioPermission) {
     return (
       <View style={{ flexDirection: "row", flex: 1 }}>
+        {animationText && (
+          <Animated.View
+            style={[
+              styles.fullscreenOverlay,
+              {
+                opacity: fadeAnim,
+                transform: [{ scale: scaleAnim }],
+              },
+            ]}
+          >
+            <Text style={styles.animationText}>{animationText}</Text>
+          </Animated.View>
+        )}
+
         {/* 📷 Left side - Camera area */}
         <View style={{ width: "100%", height: "100%" }}>
           <CameraView
@@ -404,6 +454,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     textAlign: "center",
+  },
+  fullscreenOverlay: {
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
+    backgroundColor: "#33B5E5",
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 9999,
+  },
+  animationText: {
+    color: "white",
+    fontSize: 48,
+    fontWeight: "bold",
+    textAlign: "center",
+    textShadowColor: "rgba(0,0,0,0.4)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
   },
 });
 
