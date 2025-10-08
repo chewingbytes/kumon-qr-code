@@ -11,7 +11,9 @@
       "resizeMode": "contain",
       "backgroundColor": "#f0f9ff"
     },
-    "assetBundlePatterns": ["**/*"],
+    "assetBundlePatterns": [
+      "**/*"
+    ],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kumonpunggolplaza.kumi"
@@ -22,7 +24,9 @@
         "foregroundImage": "./assets/kumi-logo.png",
         "backgroundColor": "#f0f9ff"
       },
-      "permissions": ["android.permission.CAMERA"]
+      "permissions": [
+        "android.permission.CAMERA"
+      ]
     },
     "web": {
       "favicon": "./assets/kumi-logo.png"
@@ -53,7 +57,8 @@
         }
       ],
       "expo-av",
-      "expo-build-properties"
+      "expo-build-properties",
+      "expo-font"
     ],
     "extra": {
       "EXPO_PUBLIC_API_BASE": "http://localhost:8080/",

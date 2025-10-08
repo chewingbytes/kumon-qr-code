@@ -158,12 +158,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   pageTitle: {
     flex: 1,
     fontSize: 28,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
     fontSize: 36,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   // Info Grid
@@ -219,7 +219,7 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     marginBottom: 6,
   },
   value: {
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: "#1F3C88",
     borderRadius: 16,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     shadowColor: "#000",
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.3,
@@ -254,6 +254,6 @@ const styles = StyleSheet.create({
     fontSize: 22,
     fontWeight: "bold",
     textAlign: "center",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
-})
+});

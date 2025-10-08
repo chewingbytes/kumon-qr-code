@@ -102,7 +102,12 @@ export default function MyStudentsScreen() {
                   source={{
                     uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logoarm.png",
                   }}
-                  style={{ width: 200, height: 200, marginBottom: 20, borderRadius: "999px" }}
+                  style={{
+                    width: 200,
+                    height: 200,
+                    marginBottom: 20,
+                    borderRadius: "999px",
+                  }}
                   resizeMode="contain"
                 />
                 <Text
@@ -203,7 +208,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   // Card
@@ -225,7 +230,7 @@ const styles = StyleSheet.create({
     color: "#1F3C88",
     textAlign: "center",
     marginBottom: 20,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   // Search Input
@@ -239,7 +244,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: "#ADC5CE",
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     shadowColor: "#000",
     shadowOffset: { width: 2, height: 2 },
     shadowOpacity: 0.3,
@@ -259,7 +264,7 @@ const styles = StyleSheet.create({
     color: "#1F3C88",
     textAlign: "center",
     marginBottom: 12,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   emptyButton: {
     backgroundColor: "#1F3C88",
@@ -275,7 +280,7 @@ const styles = StyleSheet.create({
     color: "#FFFACD",
     fontSize: 20,
     fontWeight: "bold",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   // Student List
@@ -297,14 +302,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 10,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   subInfoGroup: { marginBottom: 6 },
   subLabel: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   subValue: { fontSize: 18, color: "#1F3C88", fontFamily: "Courier" },
 });

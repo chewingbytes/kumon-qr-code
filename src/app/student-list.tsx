@@ -558,12 +558,12 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   pageTitle: {
     flex: 1,
     fontSize: 28,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
@@ -579,7 +579,7 @@ const styles = StyleSheet.create({
     backgroundColor: "#FFF5E4",
     fontSize: 20,
     color: "#3B185F",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   card: {
@@ -610,14 +610,14 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     fontSize: 28,
     color: "#3B185F",
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   cardDetail: {
     fontSize: 18,
     marginTop: 6,
     color: "#3B185F",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   primaryButton: {
@@ -633,7 +633,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: "#FEC260",
     fontWeight: "bold",
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     textTransform: "uppercase",
   },
 
@@ -650,7 +650,7 @@ const styles = StyleSheet.create({
   uploadCsvText: {
     color: "#3B185F",
     fontWeight: "bold",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   secondaryButton: {
@@ -666,7 +666,7 @@ const styles = StyleSheet.create({
   secondaryButtonText: {
     color: "#3B185F",
     fontWeight: "bold",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   dropdown: {
@@ -682,7 +682,7 @@ const styles = StyleSheet.create({
     paddingVertical: 12,
     fontSize: 18,
     color: "#3B185F",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   modalContainer: {
@@ -705,7 +705,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "bold",
     color: "#3B185F",
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   modalCloseBtn: {
@@ -721,7 +721,7 @@ const styles = StyleSheet.create({
     color: "#3B185F",
     fontWeight: "bold",
     fontSize: 18,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   addButton: {
@@ -738,7 +738,7 @@ const styles = StyleSheet.create({
     color: "#FFF5E4",
     fontWeight: "bold",
     fontSize: 20,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   studentItem: {
@@ -759,13 +759,13 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#3B185F",
     marginBottom: 6,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   studentParentLabel: {
     fontSize: 16,
     color: "#3B185F",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   mainRow: {
@@ -799,6 +799,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     padding: 18,
+    gap: 5,
     backgroundColor: "#FFF5E4",
   },
 
@@ -807,34 +808,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 20,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoLabel: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoValue: {
     fontSize: 22,
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   noDataText: {
     fontSize: 18,
     color: "#1F3C88",
     marginTop: 20,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   statusText: {
     fontSize: 16,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   checkedIn: { color: "#59C1BD" },
@@ -853,7 +854,7 @@ const styles = StyleSheet.create({
     color: "#FFF5E4",
     fontWeight: "bold",
     fontSize: 18,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   selectedUnderline: {
     textDecorationLine: "underline",
@@ -863,7 +864,7 @@ const styles = StyleSheet.create({
 
   button: {
     backgroundColor: "#33B5E5",
-    paddingVertical: 14,
+    paddingVertical: 8,
     paddingHorizontal: 32,
     borderRadius: 30,
     elevation: 5,
@@ -873,6 +874,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   totalCountContainer: {
@@ -887,6 +889,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 });

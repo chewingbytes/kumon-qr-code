@@ -1,5 +1,11 @@
 //mac http://192.168.1.127:4000
 //http://192.168.0.203:4000/
+import { useFonts } from "@expo-google-fonts/dynapuff/useFonts";
+import { DynaPuff_400Regular } from "@expo-google-fonts/dynapuff/400Regular";
+import { DynaPuff_500Medium } from "@expo-google-fonts/dynapuff/500Medium";
+import { DynaPuff_600SemiBold } from "@expo-google-fonts/dynapuff/600SemiBold";
+import { DynaPuff_700Bold } from "@expo-google-fonts/dynapuff/700Bold";
+
 import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
@@ -44,6 +50,17 @@ export default function HomeScreen() {
   const [csvFileName, setCsvFileName] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [manualSelect, setManualSelect] = useState(false); // track if user clicked
+
+  let [fontsLoaded] = useFonts({
+    DynaPuff_400Regular,
+    DynaPuff_500Medium,
+    DynaPuff_600SemiBold,
+    DynaPuff_700Bold,
+  });
+
+  if (!fontsLoaded) {
+    console.log("FONT NOT LAODING");
+  }
 
   useEffect(() => {
     if (studentsDashboard.length > 0 && !manualSelect) {
@@ -308,7 +325,7 @@ export default function HomeScreen() {
     <SafeAreaView style={styles.container}>
       <View style={styles.rowLayout}>
         <View style={styles.leftList}>
-          <Text style={[styles.infoTitle, { fontSize: 22 }]}>Student List</Text>
+          <Text style={[styles.infoTitle, { fontSize: 30 }]}>Student List</Text>
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {loading ? (
               <Text style={styles.noDataText}>Refreshing...</Text>
@@ -606,7 +623,7 @@ export default function HomeScreen() {
             <Text
               style={{
                 fontSize: 18,
-                fontFamily: "Courier-Bold",
+                fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
                 color: "#155724",
               }}
             >
@@ -635,6 +652,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
   },
   dropdownItem: {
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     paddingVertical: 15,
     fontSize: 25,
     color: "#004A7C",
@@ -684,7 +702,7 @@ const styles = StyleSheet.create({
   welcomeText: {
     fontSize: 50,
     marginTop: 20,
-    fontFamily: "Pacifico-Regular", // or Dancing Script / Great Vibes
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     color: "#1F3C88",
     textAlign: "center",
   },
@@ -706,6 +724,7 @@ const styles = StyleSheet.create({
     color: "#1F3C88",
     fontWeight: "600",
     letterSpacing: 1,
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     textAlign: "center",
   },
 
@@ -726,7 +745,7 @@ const styles = StyleSheet.create({
     fontSize: 28,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   modalCloseBtn: {
     width: 36,
@@ -758,7 +777,7 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: "#ADC5CE",
     fontSize: 18,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     color: "#1F3C88",
     shadowColor: "#000",
     shadowOffset: { width: 2, height: 2 },
@@ -778,9 +797,8 @@ const styles = StyleSheet.create({
   },
   addButtonText: {
     color: "#1F3C88",
-    fontWeight: "bold",
     fontSize: 20,
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   studentItem: {
     backgroundColor: "#FFFACD",
@@ -803,14 +821,14 @@ const styles = StyleSheet.create({
     fontSize: 20,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   studentParentLabel: {
     fontSize: 16,
     fontWeight: "600",
     color: "#1F3C88",
     marginTop: 4,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   removeButton: {
     width: 32,
@@ -846,7 +864,7 @@ const styles = StyleSheet.create({
   uploadCsvText: {
     color: "#1F3C88",
     fontWeight: "bold",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   primaryButton: {
     backgroundColor: "#1F3C88",
@@ -862,7 +880,7 @@ const styles = StyleSheet.create({
   primaryButtonText: {
     color: "#fff",
     fontWeight: "bold",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     fontSize: 18,
   },
   rowLayout: {
@@ -885,7 +903,7 @@ const styles = StyleSheet.create({
     fontSize: 26,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     marginBottom: 20,
     textAlign: "left",
   },
@@ -907,13 +925,13 @@ const styles = StyleSheet.create({
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Pacifico-Regular",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   listNumber: {
     fontSize: 16,
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   noStudents: {
@@ -921,7 +939,7 @@ const styles = StyleSheet.create({
     fontSize: 18,
     textAlign: "left",
     marginTop: 20,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   rightContent: {
@@ -936,34 +954,34 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 20,
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoLabel: {
     fontSize: 18,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoValue: {
     fontSize: 22,
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   noDataText: {
     fontSize: 18,
     color: "#1F3C88",
     marginTop: 20,
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   statusText: {
-    fontSize: 16,
+    fontSize: 14,
     fontWeight: "bold",
     color: "#1F3C88",
-    fontFamily: "Courier",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   checkedIn: { color: "#59C1BD" },
@@ -993,15 +1011,13 @@ const styles = StyleSheet.create({
   },
   miniCardName: {
     fontWeight: "bold",
-    fontSize: 18,
+    fontSize: 20,
     color: "#3B185F",
-    fontFamily: "Courier-Bold",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   button: {
     backgroundColor: "#33B5E5",
-    paddingVertical: 14,
-    paddingHorizontal: 32,
     borderRadius: 30,
     elevation: 5,
   },
@@ -1010,6 +1026,7 @@ const styles = StyleSheet.create({
     fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   loadingSafeArea: {
     flex: 1,
