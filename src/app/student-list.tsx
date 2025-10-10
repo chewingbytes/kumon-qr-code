@@ -79,6 +79,8 @@ export default function StudentListScreen() {
   useEffect(() => {
     if (studentsDashboard.length > 0 && !manualSelect) {
       setSelectedStudent(studentsDashboard[studentsDashboard.length - 1]);
+
+      console.log("STUDENTSDAHSBORD:", studentsDashboard)
     }
   }, [studentsDashboard, manualSelect]);
 
@@ -278,10 +280,10 @@ export default function StudentListScreen() {
     }, [])
   );
 
-  let notificationId = 0; // outside component, or use useRef for persistent ID
+  const notificationIdRef = useRef(0);
 
   const showSuccessNotification = (studentName: string, result: boolean) => {
-    const id = notificationId++;
+    const id = notificationIdRef.current++; // persist ID between renders
     const message =
       result === true
         ? `Message sent successfully to ${studentName}'s parents!`
@@ -340,7 +342,12 @@ export default function StudentListScreen() {
               style={{ flex: 1 }}
             >
               {studentsDashboard && studentsDashboard.length > 0 ? (
-                studentsDashboard
+                [...studentsDashboard]
+                  .sort(
+                    (a, b) =>
+                      new Date(b.checkin_time).getTime() -
+                      new Date(a.checkin_time).getTime()
+                  )
                   .filter((e) =>
                     e.student_name
                       ?.toLowerCase()
@@ -367,17 +374,6 @@ export default function StudentListScreen() {
                           ]}
                         >
                           {entry.student_name}{" "}
-                          {entry.parent_notified && (
-                            <Text
-                              style={{
-                                marginLeft: 8,
-                                color: "green",
-                                fontSize: 18,
-                              }}
-                            >
-                              ✅
-                            </Text>
-                          )}
                         </Text>
 
                         <Text
@@ -446,6 +442,42 @@ export default function StudentListScreen() {
                   </Text>
                 </View>
                 <View>
+                  <Text style={styles.infoLabel}>Current Status:</Text>
+                  <Text style={styles.infoValue}>
+                    {selectedStudent.status === "checked_in"
+                      ? "Checked In"
+                      : "Checked Out"}
+                  </Text>
+                </View>
+                <View>
+                  <Text style={styles.infoLabel}>
+                    Parents Notified:{" "}
+                    <Text style={styles.infoValue}>
+                      {selectedStudent.parent_notified ? (
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: "green",
+                            fontSize: 22,
+                          }}
+                        >
+                          ✅
+                        </Text>
+                      ) : (
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: "red",
+                            fontSize: 22,
+                          }}
+                        >
+                          ❌
+                        </Text>
+                      )}
+                    </Text>
+                  </Text>
+                </View>
+                <View>
                   <Text style={styles.infoLabel}>Date:</Text>
                   <Text style={styles.infoValue}>
                     {new Date(selectedStudent.checkin_time).toLocaleDateString(
@@ -468,6 +500,14 @@ export default function StudentListScreen() {
                       {new Date(
                         selectedStudent.checkout_time
                       ).toLocaleTimeString("en-SG")}
+                    </Text>
+                  </View>
+                )}
+                {selectedStudent.time_spent && (
+                  <View>
+                    <Text style={styles.infoLabel}>Time Spent:</Text>
+                    <Text style={styles.infoValue}>
+                      {selectedStudent.time_spent}mins
                     </Text>
                   </View>
                 )}
@@ -571,7 +611,7 @@ const styles = StyleSheet.create({
   },
 
   input: {
-    borderWidth: 2,
+    borderWidth: 3,
     borderColor: "#1F3C88",
     borderRadius: 10,
     padding: 18,
@@ -799,7 +839,7 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     padding: 18,
-    gap: 5,
+    gap: 30,
     backgroundColor: "#FFF5E4",
   },
 

@@ -194,10 +194,10 @@ export default function HomeScreen() {
     }
   };
 
-  let notificationId = 0; // outside component, or use useRef for persistent ID
+  const notificationIdRef = useRef(0);
 
   const showSuccessNotification = (studentName: string, result: boolean) => {
-    const id = notificationId++;
+    const id = notificationIdRef.current++; // persist ID between renders
     const message =
       result === true
         ? `Message sent successfully to ${studentName}'s parents!`
@@ -319,6 +319,8 @@ export default function HomeScreen() {
     if (dashboardScrollRef.current) {
       dashboardScrollRef.current.scrollToEnd({ animated: true });
     }
+
+    console.log("STUDNETDASHBORD:", studentsDashboard);
   }, [studentsDashboard]);
 
   return (
@@ -326,81 +328,105 @@ export default function HomeScreen() {
       <View style={styles.rowLayout}>
         <View style={styles.leftList}>
           <Text style={[styles.infoTitle, { fontSize: 30 }]}>Student List</Text>
+          <TextInput
+            placeholder="Search student..."
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+            style={styles.input}
+            placeholderTextColor="#888"
+          />
           <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
             {loading ? (
               <Text style={styles.noDataText}>Refreshing...</Text>
             ) : studentsDashboard && studentsDashboard.length > 0 ? (
-              studentsDashboard.map((entry, idx) => (
-                <View
-                  key={idx}
-                  style={[
-                    styles.miniCard,
-                    entry.status === "checked_in" ? styles.in : styles.out,
-                  ]}
-                >
-                  {/* Student Name with tick */}
-                  <Text style={styles.miniCardName}>
-                    {entry.student_name}{" "}
-                    {entry.parent_notified && (
-                      <Text
-                        style={{
-                          marginLeft: 8,
-                          color: "green",
-                          fontSize: 18,
+              [...studentsDashboard] // copy array to avoid mutating state
+                .sort(
+                  (a, b) =>
+                    new Date(b.checkin_time).getTime() -
+                    new Date(a.checkin_time).getTime()
+                )
+                .filter((e) =>
+                  e.student_name
+                    ?.toLowerCase()
+                    .includes(searchQuery.toLowerCase())
+                )
+                .map((entry, idx) => (
+                  <View
+                    key={idx}
+                    style={[
+                      styles.miniCard,
+                      entry.status === "checked_in" ? styles.in : styles.out,
+                    ]}
+                  >
+                    {/* Student Name with tick */}
+                    <Text style={styles.miniCardName}>
+                      {entry.student_name}{" "}
+                      {entry.parent_notified && (
+                        <Text
+                          style={{
+                            marginLeft: 8,
+                            color: "green",
+                            fontSize: 18,
+                          }}
+                        >
+                          ✅
+                        </Text>
+                      )}
+                    </Text>
+
+                    {/* Status */}
+                    <Text
+                      style={[
+                        styles.statusText,
+                        entry.status === "checked_in"
+                          ? styles.checkedIn
+                          : styles.checkedOut,
+                      ]}
+                    >
+                      {entry.status === "checked_in"
+                        ? "Checked In"
+                        : "Checked Out"}
+                    </Text>
+
+                    {entry.status === "checked_out" ? (
+                      <TouchableOpacity
+                        style={[
+                          styles.button,
+                          { marginTop: 10, paddingVertical: 8 },
+                        ]}
+                        onPress={async () => {
+                          const result = await sendWhatsappMessage(
+                            entry.student_name
+                          );
+                          if (result) {
+                            showSuccessNotification(entry.student_name, result);
+                            await fetchStudents(); // refresh dashboard to update parent_notified
+                          } else {
+                            Alert.alert(
+                              "Error",
+                              `Failed to send message to ${entry.student_name}'s parents.`
+                            );
+                          }
                         }}
                       >
-                        ✅
-                      </Text>
-                    )}
-                  </Text>
-
-                  {/* Status */}
-                  <Text
-                    style={[
-                      styles.statusText,
-                      entry.status === "checked_in"
-                        ? styles.checkedIn
-                        : styles.checkedOut,
-                    ]}
-                  >
-                    {entry.status === "checked_in"
-                      ? "Checked In"
-                      : "Checked Out"}
-                  </Text>
-
-                  {/* Notify / Notify Again Button */}
-                  <TouchableOpacity
-                    style={[
-                      styles.button,
-                      { marginTop: 10, paddingVertical: 8 },
-                    ]}
-                    onPress={async () => {
-                      const result = await sendWhatsappMessage(
-                        entry.student_name
-                      );
-                      if (result) {
-                        showSuccessNotification(entry.student_name, result);
-                        await fetchStudents(); // refresh dashboard to update parent_notified
-                      } else {
-                        Alert.alert(
-                          "Error",
-                          `Failed to send message to ${entry.student_name}'s parents.`
-                        );
-                      }
-                    }}
-                  >
-                    <Text style={styles.text}>
-                      {entry.parent_notified ? "Notify Again" : "Notify"}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
-              ))
+                        <Text style={styles.text}>
+                          {entry.parent_notified ? "Notify Again" : "Notify"}
+                        </Text>
+                      </TouchableOpacity>
+                    ) : null}
+                  </View>
+                ))
             ) : (
               <SafeAreaView style={styles.loadingSafeArea}>
                 <ActivityIndicator size="large" color="#004A7C" />
               </SafeAreaView>
             )}
           </ScrollView>
+          <View style={styles.totalCountContainer}>
+            <Text style={styles.totalCountText}>
+              Total Students: {studentsDashboard.length}
+            </Text>
+          </View>
         </View>
 
         {/* Hamburger Menu */}
@@ -429,7 +455,7 @@ export default function HomeScreen() {
             style={styles.scanButton}
             onPress={() => router.push("/scanner")}
           >
-            <Text style={styles.scanText}>Scan QR Code</Text>
+            <Text style={styles.scanText}>Scan</Text>
           </TouchableOpacity>
           {dropdownVisible && (
             <View style={styles.dropdownMenu}>
@@ -720,9 +746,9 @@ const styles = StyleSheet.create({
     shadowRadius: 4,
   },
   scanText: {
-    fontSize: 25,
+    fontSize: 100,
     color: "#1F3C88",
-    fontWeight: "600",
+    fontWeight: "100",
     letterSpacing: 1,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     textAlign: "center",
@@ -771,11 +797,10 @@ const styles = StyleSheet.create({
   input: {
     borderWidth: 3,
     borderColor: "#1F3C88",
-    borderRadius: 20,
+    borderRadius: 10,
     paddingVertical: 15,
     paddingHorizontal: 20,
-    marginBottom: 16,
-    backgroundColor: "#ADC5CE",
+    marginBottom: 12,
     fontSize: 18,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     color: "#1F3C88",
@@ -1032,5 +1057,19 @@ const styles = StyleSheet.create({
     flex: 1,
     justifyContent: "center",
     alignItems: "center",
+  },
+  totalCountContainer: {
+    paddingTop: 12,
+    borderTopWidth: 2,
+    borderColor: "#1F3C88",
+    marginTop: 8,
+    alignItems: "flex-start",
+  },
+
+  totalCountText: {
+    fontSize: 20,
+    fontWeight: "bold",
+    color: "#1F3C88",
+    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 });
