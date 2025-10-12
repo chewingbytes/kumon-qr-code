@@ -76,7 +76,7 @@ export default function MyStudentsScreen() {
             style={styles.backButton}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>⬅ Back</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <View style={styles.card}>
             <Text style={styles.title}>Your Students</Text>
@@ -113,7 +113,6 @@ export default function MyStudentsScreen() {
                 <Text
                   style={{
                     fontSize: 18,
-                    fontWeight: "600",
                     marginBottom: 12,
                     color: "#333",
                     textAlign: "center",
@@ -132,7 +131,7 @@ export default function MyStudentsScreen() {
                   }}
                 >
                   <Text
-                    style={{ color: "#fff", fontSize: 16, fontWeight: "500" }}
+                    style={{ color: "#fff", fontSize: 16 }}
                   >
                     Go to Dashboard
                   </Text>
@@ -206,7 +205,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -226,7 +224,6 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: 32,
-    fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
     marginBottom: 20,
@@ -260,7 +257,6 @@ const styles = StyleSheet.create({
   emptyImage: { width: 180, height: 180, marginBottom: 20 },
   emptyText: {
     fontSize: 20,
-    fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
     marginBottom: 12,
@@ -279,12 +275,11 @@ const styles = StyleSheet.create({
   emptyButtonText: {
     color: "#FFFACD",
     fontSize: 20,
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   // Student List
-  studentList: { marginTop: 10 },
+  studentList: { marginTop: 10, maxHeight: Dimensions.get("window").height * 0.6 },
   studentCard: {
     backgroundColor: "#ADC5CE",
     padding: 18,
@@ -299,7 +294,6 @@ const styles = StyleSheet.create({
   },
   studentTitle: {
     fontSize: 28,
-    fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 10,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -307,7 +301,6 @@ const styles = StyleSheet.create({
   subInfoGroup: { marginBottom: 6 },
   subLabel: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },

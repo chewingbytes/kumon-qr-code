@@ -80,7 +80,7 @@ export default function StudentListScreen() {
     if (studentsDashboard.length > 0 && !manualSelect) {
       setSelectedStudent(studentsDashboard[studentsDashboard.length - 1]);
 
-      console.log("STUDENTSDAHSBORD:", studentsDashboard)
+      console.log("STUDENTSDAHSBORD:", studentsDashboard);
     }
   }, [studentsDashboard, manualSelect]);
 
@@ -319,7 +319,7 @@ export default function StudentListScreen() {
             style={styles.backButton}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>⬅ Back</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.pageTitle}>Student List</Text>
         </View>
@@ -390,30 +390,35 @@ export default function StudentListScreen() {
                         </Text>
                       </View>
 
-                      <TouchableOpacity
-                        style={[
-                          styles.button,
-                          { marginTop: 10, paddingVertical: 8 },
-                        ]}
-                        onPress={async () => {
-                          const result = await sendWhatsappMessage(
-                            entry.student_name
-                          );
-                          if (result) {
-                            showSuccessNotification(entry.student_name, result);
-                            await fetchStudents(); // refresh dashboard to update parent_notified
-                          } else {
-                            Alert.alert(
-                              "Error",
-                              `Failed to send message to ${entry.student_name}'s parents.`
+                      {entry.status === "checked_out" ? (
+                        <TouchableOpacity
+                          style={[
+                            styles.button,
+                            { marginTop: 10, paddingVertical: 8 },
+                          ]}
+                          onPress={async () => {
+                            const result = await sendWhatsappMessage(
+                              entry.student_name
                             );
-                          }
-                        }}
-                      >
-                        <Text style={styles.text}>
-                          {entry.parent_notified ? "Notify Again" : "Notify"}
-                        </Text>
-                      </TouchableOpacity>
+                            if (result) {
+                              showSuccessNotification(
+                                entry.student_name,
+                                result
+                              );
+                              await fetchStudents(); // refresh dashboard to update parent_notified
+                            } else {
+                              Alert.alert(
+                                "Error",
+                                `Failed to send message to ${entry.student_name}'s parents.`
+                              );
+                            }
+                          }}
+                        >
+                          <Text style={styles.text}>
+                            {entry.parent_notified ? "Notify Again" : "Notify"}
+                          </Text>
+                        </TouchableOpacity>
+                      ) : null}
                     </Pressable>
                   ))
               ) : (
@@ -435,13 +440,15 @@ export default function StudentListScreen() {
             {selectedStudent ? (
               <View style={[styles.infoCard, { flex: 1 }]}>
                 <Text style={styles.infoTitle}>Info Card</Text>
-                <View>
+
+                <View style={styles.infoSection}>
                   <Text style={styles.infoLabel}>Name:</Text>
                   <Text style={styles.infoValue}>
                     {selectedStudent.student_name}
                   </Text>
                 </View>
-                <View>
+
+                <View style={styles.infoSection}>
                   <Text style={styles.infoLabel}>Current Status:</Text>
                   <Text style={styles.infoValue}>
                     {selectedStudent.status === "checked_in"
@@ -449,35 +456,15 @@ export default function StudentListScreen() {
                       : "Checked Out"}
                   </Text>
                 </View>
-                <View>
-                  <Text style={styles.infoLabel}>
-                    Parents Notified:{" "}
-                    <Text style={styles.infoValue}>
-                      {selectedStudent.parent_notified ? (
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: "green",
-                            fontSize: 22,
-                          }}
-                        >
-                          ✅
-                        </Text>
-                      ) : (
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: "red",
-                            fontSize: 22,
-                          }}
-                        >
-                          ❌
-                        </Text>
-                      )}
-                    </Text>
+
+                <View style={styles.infoSection}>
+                  <Text style={styles.infoLabel}>Parents Notified:</Text>
+                  <Text style={styles.infoValue}>
+                    {selectedStudent.parent_notified ? "✅ Yes" : "❌ No"}
                   </Text>
                 </View>
-                <View>
+
+                <View style={styles.infoSection}>
                   <Text style={styles.infoLabel}>Date:</Text>
                   <Text style={styles.infoValue}>
                     {new Date(selectedStudent.checkin_time).toLocaleDateString(
@@ -485,7 +472,8 @@ export default function StudentListScreen() {
                     )}
                   </Text>
                 </View>
-                <View>
+
+                <View style={styles.infoSection}>
                   <Text style={styles.infoLabel}>Checked In:</Text>
                   <Text style={styles.infoValue}>
                     {new Date(selectedStudent.checkin_time).toLocaleTimeString(
@@ -493,8 +481,9 @@ export default function StudentListScreen() {
                     )}
                   </Text>
                 </View>
+
                 {selectedStudent.checkout_time && (
-                  <View>
+                  <View style={styles.infoSection}>
                     <Text style={styles.infoLabel}>Checked Out:</Text>
                     <Text style={styles.infoValue}>
                       {new Date(
@@ -503,11 +492,12 @@ export default function StudentListScreen() {
                     </Text>
                   </View>
                 )}
+
                 {selectedStudent.time_spent && (
-                  <View>
+                  <View style={styles.infoSection}>
                     <Text style={styles.infoLabel}>Time Spent:</Text>
                     <Text style={styles.infoValue}>
-                      {selectedStudent.time_spent}mins
+                      {selectedStudent.time_spent} mins
                     </Text>
                   </View>
                 )}
@@ -596,7 +586,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -604,7 +593,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 28,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
-    fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
     marginRight: 40, // ensures back button doesn't overlap
@@ -647,7 +635,6 @@ const styles = StyleSheet.create({
   },
 
   cardTitle: {
-    fontWeight: "bold",
     fontSize: 28,
     color: "#3B185F",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -672,7 +659,6 @@ const styles = StyleSheet.create({
 
   primaryButtonText: {
     color: "#FEC260",
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     textTransform: "uppercase",
   },
@@ -689,7 +675,6 @@ const styles = StyleSheet.create({
 
   uploadCsvText: {
     color: "#3B185F",
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
@@ -705,7 +690,6 @@ const styles = StyleSheet.create({
 
   secondaryButtonText: {
     color: "#3B185F",
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
@@ -743,7 +727,6 @@ const styles = StyleSheet.create({
 
   modalTitle: {
     fontSize: 26,
-    fontWeight: "bold",
     color: "#3B185F",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -759,7 +742,6 @@ const styles = StyleSheet.create({
 
   modalCloseText: {
     color: "#3B185F",
-    fontWeight: "bold",
     fontSize: 18,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -776,7 +758,6 @@ const styles = StyleSheet.create({
 
   addButtonText: {
     color: "#FFF5E4",
-    fontWeight: "bold",
     fontSize: 20,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -796,7 +777,6 @@ const styles = StyleSheet.create({
 
   studentName: {
     fontSize: 22,
-    fontWeight: "bold",
     color: "#3B185F",
     marginBottom: 6,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -839,27 +819,25 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     padding: 18,
-    gap: 30,
+    gap: 8,
     backgroundColor: "#FFF5E4",
   },
 
   infoTitle: {
     fontSize: 28,
-    fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 20,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoLabel: {
-    fontSize: 18,
-    fontWeight: "bold",
+    fontSize: 15,
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoValue: {
-    fontSize: 22,
+    fontSize: 30,
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -873,7 +851,6 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: 16,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -892,7 +869,6 @@ const styles = StyleSheet.create({
 
   removeButtonText: {
     color: "#FFF5E4",
-    fontWeight: "bold",
     fontSize: 18,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -911,7 +887,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -927,8 +902,12 @@ const styles = StyleSheet.create({
 
   totalCountText: {
     fontSize: 20,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  infoSection: {
+    borderBottomWidth: 2,
+    borderColor: "#1F3C88",
+    paddingVertical: 5,
   },
 });

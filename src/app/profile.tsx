@@ -74,7 +74,7 @@ export default function ProfileScreen() {
             style={styles.backButton}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>⬅ Back</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
           <Text style={styles.pageTitle}>My Profile</Text>
         </View>
@@ -156,7 +156,6 @@ const styles = StyleSheet.create({
   },
   backButtonText: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -164,7 +163,6 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: 28,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
-    fontWeight: "bold",
     color: "#1F3C88",
     textAlign: "center",
     marginRight: 40, // ensures back button doesn't overlap
@@ -202,7 +200,6 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -217,7 +214,6 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: 20,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     marginBottom: 6,
@@ -252,7 +248,6 @@ const styles = StyleSheet.create({
   logoutText: {
     color: "#FFFACD",
     fontSize: 22,
-    fontWeight: "bold",
     textAlign: "center",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },

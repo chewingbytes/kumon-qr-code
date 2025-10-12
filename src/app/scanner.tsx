@@ -375,7 +375,7 @@ const QRScanner: React.FC = () => {
             ]}
             onPress={() => router.push("/")}
           >
-            <Text style={styles.backButtonText}>⬅ Back</Text>
+            <Text style={styles.backButtonText}>Back</Text>
           </TouchableOpacity>
 
           <View
@@ -416,7 +416,6 @@ const styles = StyleSheet.create({
   backButtonText: {
     color: "#004A7C",
     fontSize: 16,
-    fontWeight: "bold",
   },
   buttonContainer: {
     position: "absolute",
@@ -435,7 +434,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
   },
@@ -452,7 +450,6 @@ const styles = StyleSheet.create({
   popupText: {
     color: "#fff",
     fontSize: 18,
-    fontWeight: "bold",
     textAlign: "center",
   },
   fullscreenOverlay: {
@@ -469,7 +466,6 @@ const styles = StyleSheet.create({
   animationText: {
     color: "white",
     fontSize: 48,
-    fontWeight: "bold",
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.4)",
     textShadowOffset: { width: 2, height: 2 },

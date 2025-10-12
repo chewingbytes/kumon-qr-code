@@ -10,6 +10,7 @@ import * as DocumentPicker from "expo-document-picker";
 import { supabase } from "../../lib/supabase";
 import Constants from "expo-constants";
 const API = Constants.expoConfig?.extra?.EXPO_PUBLIC_API_BASE;
+console.log("API:", API);
 import React, { useState, useCallback, useRef, useEffect } from "react";
 import {
   View,
@@ -58,16 +59,6 @@ export default function HomeScreen() {
     DynaPuff_700Bold,
   });
 
-  if (!fontsLoaded) {
-    console.log("FONT NOT LAODING");
-  }
-
-  useEffect(() => {
-    if (studentsDashboard.length > 0 && !manualSelect) {
-      setSelectedStudent(studentsDashboard[studentsDashboard.length - 1]);
-    }
-  }, [studentsDashboard, manualSelect]);
-
   const handlePickCSV = async () => {
     try {
       const result = await DocumentPicker.getDocumentAsync({
@@ -97,8 +88,10 @@ export default function HomeScreen() {
   };
 
   const uploadPickedCSV = async () => {
-    if (!pickedCSV)
+    if (!pickedCSV) {
+      console.log("No file picked!");
       return Alert.alert("No file", "Please pick a CSV file first.");
+    }
 
     setUploading(true);
 
@@ -106,14 +99,19 @@ export default function HomeScreen() {
       const {
         data: { session },
       } = await supabase.auth.getSession();
-
       const accessToken = session?.access_token;
 
-      const formData = new FormData();
-      // @ts-ignore
-      formData.append("file", pickedCSV);
+      // Convert blob URI to File object
+      const response = await fetch(pickedCSV.uri);
+      const blob = await response.blob();
 
-      const response = await fetch(API + "api/db/upload-csv", {
+      const formData = new FormData();
+      formData.append(
+        "file",
+        new File([blob], pickedCSV.name, { type: pickedCSV.type })
+      );
+
+      const res = await fetch(API + "api/db/upload-csv", {
         method: "POST",
         headers: {
           Authorization: `Bearer ${accessToken}`,
@@ -121,7 +119,7 @@ export default function HomeScreen() {
         body: formData,
       });
 
-      const json = await response.json();
+      const json = await res.json();
       setUploading(false);
       setPickedCSV(null);
       setCsvFileName(null);
@@ -275,6 +273,8 @@ export default function HomeScreen() {
 
       const accessToken = session?.access_token;
 
+      console.log("SNEDING REQUEST:", API + "api/db/students");
+
       const res = await fetch(API + "api/db/students", {
         method: "POST",
         headers: {
@@ -323,343 +323,352 @@ export default function HomeScreen() {
     console.log("STUDNETDASHBORD:", studentsDashboard);
   }, [studentsDashboard]);
 
-  return (
-    <SafeAreaView style={styles.container}>
-      <View style={styles.rowLayout}>
-        <View style={styles.leftList}>
-          <Text style={[styles.infoTitle, { fontSize: 30 }]}>Student List</Text>
-          <TextInput
-            placeholder="Search student..."
-            value={searchQuery}
-            onChangeText={setSearchQuery}
-            style={styles.input}
-            placeholderTextColor="#888"
-          />
-          <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
-            {loading ? (
-              <Text style={styles.noDataText}>Refreshing...</Text>
-            ) : studentsDashboard && studentsDashboard.length > 0 ? (
-              [...studentsDashboard] // copy array to avoid mutating state
-                .sort(
-                  (a, b) =>
-                    new Date(b.checkin_time).getTime() -
-                    new Date(a.checkin_time).getTime()
-                )
-                .filter((e) =>
-                  e.student_name
-                    ?.toLowerCase()
-                    .includes(searchQuery.toLowerCase())
-                )
-                .map((entry, idx) => (
-                  <View
-                    key={idx}
-                    style={[
-                      styles.miniCard,
-                      entry.status === "checked_in" ? styles.in : styles.out,
-                    ]}
-                  >
-                    {/* Student Name with tick */}
-                    <Text style={styles.miniCardName}>
-                      {entry.student_name}{" "}
-                      {entry.parent_notified && (
-                        <Text
-                          style={{
-                            marginLeft: 8,
-                            color: "green",
-                            fontSize: 18,
-                          }}
-                        >
-                          ✅
-                        </Text>
-                      )}
-                    </Text>
-
-                    {/* Status */}
-                    <Text
+  if (!fontsLoaded) {
+    return null;
+  } else {
+    return (
+      <View
+        style={[styles.container, { flex: 1, paddingTop: 0, paddingBottom: 0 }]}
+      >
+        <View style={styles.rowLayout}>
+          <View style={styles.leftList}>
+            <Text style={styles.infoTitle}>Student List</Text>
+            <TextInput
+              placeholder="Search student..."
+              value={searchQuery}
+              onChangeText={setSearchQuery}
+              style={styles.input}
+              placeholderTextColor="#888"
+            />
+            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+              {loading ? (
+                <Text style={styles.noDataText}>Refreshing...</Text>
+              ) : studentsDashboard && studentsDashboard.length > 0 ? (
+                [...studentsDashboard] // copy array to avoid mutating state
+                  .sort(
+                    (a, b) =>
+                      new Date(b.checkin_time).getTime() -
+                      new Date(a.checkin_time).getTime()
+                  )
+                  .filter((e) =>
+                    e.student_name
+                      ?.toLowerCase()
+                      .includes(searchQuery.toLowerCase())
+                  )
+                  .map((entry, idx) => (
+                    <View
+                      key={idx}
                       style={[
-                        styles.statusText,
-                        entry.status === "checked_in"
-                          ? styles.checkedIn
-                          : styles.checkedOut,
+                        styles.miniCard,
+                        entry.status === "checked_in" ? styles.in : styles.out,
                       ]}
                     >
-                      {entry.status === "checked_in"
-                        ? "Checked In"
-                        : "Checked Out"}
-                    </Text>
-
-                    {entry.status === "checked_out" ? (
-                      <TouchableOpacity
-                        style={[
-                          styles.button,
-                          { marginTop: 10, paddingVertical: 8 },
-                        ]}
-                        onPress={async () => {
-                          const result = await sendWhatsappMessage(
-                            entry.student_name
-                          );
-                          if (result) {
-                            showSuccessNotification(entry.student_name, result);
-                            await fetchStudents(); // refresh dashboard to update parent_notified
-                          } else {
-                            Alert.alert(
-                              "Error",
-                              `Failed to send message to ${entry.student_name}'s parents.`
-                            );
-                          }
-                        }}
-                      >
-                        <Text style={styles.text}>
-                          {entry.parent_notified ? "Notify Again" : "Notify"}
-                        </Text>
-                      </TouchableOpacity>
-                    ) : null}
-                  </View>
-                ))
-            ) : (
-              <SafeAreaView style={styles.loadingSafeArea}>
-                <ActivityIndicator size="large" color="#004A7C" />
-              </SafeAreaView>
-            )}
-          </ScrollView>
-          <View style={styles.totalCountContainer}>
-            <Text style={styles.totalCountText}>
-              Total Students: {studentsDashboard.length}
-            </Text>
-          </View>
-        </View>
-
-        {/* Hamburger Menu */}
-        <View style={styles.rightContent}>
-          <TouchableOpacity
-            style={styles.menuButton}
-            onPress={() => setDropdownVisible(!dropdownVisible)}
-          >
-            <Text style={styles.hamburgerIcon}>☰</Text>
-          </TouchableOpacity>
-
-          {/* Center Content */}
-          <View style={styles.centerContent}>
-            <Image
-              source={{
-                uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/kumon-vector-logo.png",
-              }}
-              style={styles.logo}
-            />
-            <Text style={styles.welcomeText}>
-              Welcome to Kumon Punggol Plaza
-            </Text>
-          </View>
-
-          <TouchableOpacity
-            style={styles.scanButton}
-            onPress={() => router.push("/scanner")}
-          >
-            <Text style={styles.scanText}>Scan</Text>
-          </TouchableOpacity>
-          {dropdownVisible && (
-            <View style={styles.dropdownMenu}>
-              <Pressable onPress={() => router.push("/profile")}>
-                <Text style={styles.dropdownItem}>My Profile</Text>
-              </Pressable>
-              <Pressable onPress={() => router.push("/my-students")}>
-                <Text style={styles.dropdownItem}>My Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setModalVisible(true);
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Add Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    "Are you sure?",
-                    "This will finish the day and email the attendance Excel report.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Yes, proceed",
-                        onPress: () => finishDay(),
-                      },
-                    ]
-                  );
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Finish the Day</Text>
-              </Pressable>
-            </View>
-          )}
-
-          {/* Modal */}
-          <Modal visible={modalVisible} animationType="slide">
-            <SafeAreaView style={styles.modalContainer}>
-              {/* Header */}
-              <View style={styles.modalHeader}>
-                <Text style={styles.modalTitle}>Add Students</Text>
-                <TouchableOpacity
-                  onPress={() => setModalVisible(false)}
-                  style={styles.modalCloseBtn}
-                >
-                  <Text style={styles.modalCloseText}>✕</Text>
-                </TouchableOpacity>
-              </View>
-
-              {/* Content */}
-              <ScrollView contentContainerStyle={styles.modalContent}>
-                <TextInput
-                  style={styles.input}
-                  placeholder="Student Name"
-                  value={studentName}
-                  onChangeText={setStudentName}
-                  placeholderTextColor="#1F3C88"
-                />
-                <TextInput
-                  style={styles.input}
-                  placeholder="Parent's Number"
-                  value={parentNumber}
-                  onChangeText={setParentNumber}
-                  placeholderTextColor="#1F3C88"
-                />
-
-                <Pressable style={styles.addButton} onPress={addStudent}>
-                  <Text style={styles.addButtonText}>Add</Text>
-                </Pressable>
-
-                {/* Students List */}
-                {students.length > 0 &&
-                  students.map((s, i) => (
-                    <View key={i} style={styles.studentItem}>
-                      <View style={styles.studentRow}>
-                        <View>
-                          <Text style={styles.studentName}>{s.name}</Text>
-                          <Text style={styles.studentParentLabel}>
-                            Number: {s.parentNumber}
+                      {/* Student Name with tick */}
+                      <Text style={styles.miniCardName}>
+                        {entry.student_name}{" "}
+                        {entry.parent_notified && (
+                          <Text
+                            style={{
+                              marginLeft: 8,
+                              color: "green",
+                              fontSize: 18,
+                            }}
+                          >
+                            ✅
                           </Text>
-                        </View>
+                        )}
+                      </Text>
+
+                      {/* Status */}
+                      <Text
+                        style={[
+                          styles.statusText,
+                          entry.status === "checked_in"
+                            ? styles.checkedIn
+                            : styles.checkedOut,
+                        ]}
+                      >
+                        {entry.status === "checked_in"
+                          ? "Checked In"
+                          : "Checked Out"}
+                      </Text>
+
+                      {entry.status === "checked_out" ? (
                         <TouchableOpacity
-                          style={styles.removeButton}
-                          onPress={() =>
-                            setStudents((prev) =>
-                              prev.filter((_, idx) => idx !== i)
-                            )
-                          }
+                          style={[
+                            styles.button,
+                            { marginTop: 10, paddingVertical: 8 },
+                          ]}
+                          onPress={async () => {
+                            const result = await sendWhatsappMessage(
+                              entry.student_name
+                            );
+                            if (result) {
+                              showSuccessNotification(
+                                entry.student_name,
+                                result
+                              );
+                              await fetchStudents(); // refresh dashboard to update parent_notified
+                            } else {
+                              Alert.alert(
+                                "Error",
+                                `Failed to send message to ${entry.student_name}'s parents.`
+                              );
+                            }
+                          }}
                         >
-                          <Text style={styles.removeButtonText}>✕</Text>
+                          <Text style={styles.text}>
+                            {entry.parent_notified ? "Notify Again" : "Notify"}
+                          </Text>
                         </TouchableOpacity>
-                      </View>
+                      ) : null}
                     </View>
-                  ))}
-
-                {/* CSV & Submit Buttons */}
-                <View style={styles.buttonRow}>
-                  <Pressable
-                    style={[styles.uploadCSVButton, { flex: 1 }]}
-                    onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
-                    disabled={uploading}
-                  >
-                    <Text style={styles.uploadCsvText}>
-                      {uploading
-                        ? "Uploading..."
-                        : pickedCSV
-                        ? `Upload: ${csvFileName}`
-                        : "Import CSV"}
-                    </Text>
-                  </Pressable>
-                  <Pressable
-                    style={[styles.primaryButton, { flex: 1 }]}
-                    onPress={submitStudents}
-                  >
-                    <Text style={styles.primaryButtonText}>Submit</Text>
-                  </Pressable>
-                </View>
-              </ScrollView>
-            </SafeAreaView>
-          </Modal>
-
-          {dropdownVisible && (
-            <View style={styles.dropdownMenu}>
-              <Pressable onPress={() => router.push("/student-list")}>
-                <Text style={styles.dropdownItem}>Student List</Text>
-              </Pressable>
-              <Pressable onPress={() => router.push("/profile")}>
-                <Text style={styles.dropdownItem}>My Profile</Text>
-              </Pressable>
-              <Pressable onPress={() => router.push("/my-students")}>
-                <Text style={styles.dropdownItem}>My Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  setModalVisible(true);
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Add Students</Text>
-              </Pressable>
-              <Pressable
-                onPress={() => {
-                  Alert.alert(
-                    "Are you sure?",
-                    "This will finish the day and email the attendance Excel report.",
-                    [
-                      { text: "Cancel", style: "cancel" },
-                      {
-                        text: "Yes, proceed",
-                        onPress: () => finishDay(),
-                      },
-                    ]
-                  );
-                  setDropdownVisible(false);
-                }}
-              >
-                <Text style={styles.dropdownItem}>Finish the Day</Text>
-              </Pressable>
+                  ))
+              ) : (
+                <SafeAreaView style={styles.loadingSafeArea}>
+                  <ActivityIndicator size="large" color="#004A7C" />
+                </SafeAreaView>
+              )}
+            </ScrollView>
+            <View style={styles.totalCountContainer}>
+              <Text style={styles.totalCountText}>
+                Total Students: {studentsDashboard.length}
+              </Text>
             </View>
-          )}
+          </View>
+
+          {/* Hamburger Menu */}
+          <View style={styles.rightContent}>
+            <TouchableOpacity
+              style={styles.menuButton}
+              onPress={() => setDropdownVisible(!dropdownVisible)}
+            >
+              <Text style={styles.hamburgerIcon}>☰</Text>
+            </TouchableOpacity>
+
+            {/* Center Content */}
+            <View style={styles.centerContent}>
+              <Image
+                source={{
+                  uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/kumon-vector-logo.png",
+                }}
+                style={styles.logo}
+              />
+              <Text style={styles.welcomeText}>
+                Welcome to Kumon Punggol Plaza
+              </Text>
+            </View>
+
+            <TouchableOpacity
+              style={styles.scanButton}
+              onPress={() => router.push("/scanner")}
+            >
+              <Text style={styles.scanText}>Scan</Text>
+            </TouchableOpacity>
+            {dropdownVisible && (
+              <View style={styles.dropdownMenu}>
+                <Pressable onPress={() => router.push("/profile")}>
+                  <Text style={styles.dropdownItem}>My Profile</Text>
+                </Pressable>
+                <Pressable onPress={() => router.push("/my-students")}>
+                  <Text style={styles.dropdownItem}>My Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setModalVisible(true);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Add Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    Alert.alert(
+                      "Are you sure?",
+                      "This will finish the day and email the attendance Excel report.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Yes, proceed",
+                          onPress: () => finishDay(),
+                        },
+                      ]
+                    );
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Finish the Day</Text>
+                </Pressable>
+              </View>
+            )}
+
+            {/* Modal */}
+            <Modal visible={modalVisible} animationType="slide">
+              <SafeAreaView style={styles.modalContainer}>
+                {/* Header */}
+                <View style={styles.modalHeader}>
+                  <Text style={styles.modalTitle}>Add Students</Text>
+                  <TouchableOpacity
+                    onPress={() => setModalVisible(false)}
+                    style={styles.modalCloseBtn}
+                  >
+                    <Text style={styles.modalCloseText}>✕</Text>
+                  </TouchableOpacity>
+                </View>
+
+                {/* Content */}
+                <ScrollView contentContainerStyle={styles.modalContent}>
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Student Name"
+                    value={studentName}
+                    onChangeText={setStudentName}
+                    placeholderTextColor="#1F3C88"
+                  />
+                  <TextInput
+                    style={styles.input}
+                    placeholder="Parent's Number"
+                    value={parentNumber}
+                    onChangeText={setParentNumber}
+                    placeholderTextColor="#1F3C88"
+                  />
+
+                  <Pressable style={styles.addButton} onPress={addStudent}>
+                    <Text style={styles.addButtonText}>Add</Text>
+                  </Pressable>
+
+                  {/* Students List */}
+                  {students.length > 0 &&
+                    students.map((s, i) => (
+                      <View key={i} style={styles.studentItem}>
+                        <View style={styles.studentRow}>
+                          <View>
+                            <Text style={styles.studentName}>{s.name}</Text>
+                            <Text style={styles.studentParentLabel}>
+                              Number: {s.parentNumber}
+                            </Text>
+                          </View>
+                          <TouchableOpacity
+                            style={styles.removeButton}
+                            onPress={() =>
+                              setStudents((prev) =>
+                                prev.filter((_, idx) => idx !== i)
+                              )
+                            }
+                          >
+                            <Text style={styles.removeButtonText}>✕</Text>
+                          </TouchableOpacity>
+                        </View>
+                      </View>
+                    ))}
+
+                  {/* CSV & Submit Buttons */}
+                  <View style={styles.buttonRow}>
+                    <Pressable
+                      style={[styles.uploadCSVButton, { flex: 1 }]}
+                      onPress={pickedCSV ? uploadPickedCSV : handlePickCSV}
+                      disabled={uploading}
+                    >
+                      <Text style={styles.uploadCsvText}>
+                        {uploading
+                          ? "Uploading..."
+                          : pickedCSV
+                          ? `Upload: ${csvFileName}`
+                          : "Import CSV"}
+                      </Text>
+                    </Pressable>
+                    <Pressable
+                      style={[styles.primaryButton, { flex: 1 }]}
+                      onPress={submitStudents}
+                    >
+                      <Text style={styles.primaryButtonText}>Submit</Text>
+                    </Pressable>
+                  </View>
+                </ScrollView>
+              </SafeAreaView>
+            </Modal>
+
+            {dropdownVisible && (
+              <View style={styles.dropdownMenu}>
+                <Pressable onPress={() => router.push("/student-list")}>
+                  <Text style={styles.dropdownItem}>Student List</Text>
+                </Pressable>
+                <Pressable onPress={() => router.push("/profile")}>
+                  <Text style={styles.dropdownItem}>My Profile</Text>
+                </Pressable>
+                <Pressable onPress={() => router.push("/my-students")}>
+                  <Text style={styles.dropdownItem}>My Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    setModalVisible(true);
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Add Students</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => {
+                    Alert.alert(
+                      "Are you sure?",
+                      "This will finish the day and email the attendance Excel report.",
+                      [
+                        { text: "Cancel", style: "cancel" },
+                        {
+                          text: "Yes, proceed",
+                          onPress: () => finishDay(),
+                        },
+                      ]
+                    );
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Finish the Day</Text>
+                </Pressable>
+              </View>
+            )}
+          </View>
         </View>
-      </View>
-      <View
-        style={{
-          position: "absolute",
-          top: 20,
-          right: 20,
-          zIndex: 99999,
-        }}
-      >
-        {successNotifications.map((notif, index) => (
-          <Animated.View
-            key={index}
-            style={{
-              marginTop: index * 10, // stack them vertically
-              width: 280,
-              backgroundColor: "#D4EDDA",
-              borderColor: "#155724",
-              borderWidth: 2,
-              borderRadius: 12,
-              padding: 16,
-              shadowColor: "#000",
-              shadowOffset: { width: 2, height: 2 },
-              shadowOpacity: 0.3,
-              shadowRadius: 4,
-            }}
-          >
-            <Text
+        <View
+          style={{
+            position: "absolute",
+            top: 20,
+            right: 20,
+            zIndex: 99999,
+          }}
+        >
+          {successNotifications.map((notif, index) => (
+            <Animated.View
+              key={index}
               style={{
-                fontSize: 18,
-                fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
-                color: "#155724",
+                marginTop: index * 10, // stack them vertically
+                width: 280,
+                backgroundColor: "#D4EDDA",
+                borderColor: "#155724",
+                borderWidth: 2,
+                borderRadius: 12,
+                padding: 16,
+                shadowColor: "#000",
+                shadowOffset: { width: 2, height: 2 },
+                shadowOpacity: 0.3,
+                shadowRadius: 4,
               }}
             >
-              {notif.message}
-            </Text>
-          </Animated.View>
-        ))}
+              <Text
+                style={{
+                  fontSize: 18,
+                  fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+                  color: "#155724",
+                }}
+              >
+                {notif.message}
+              </Text>
+            </Animated.View>
+          ))}
+        </View>
       </View>
-    </SafeAreaView>
-  );
+    );
+  }
 }
 
 const styles = StyleSheet.create({
@@ -736,7 +745,7 @@ const styles = StyleSheet.create({
     marginTop: 50,
     backgroundColor: "#F2E9E4",
     width: "90%",
-    paddingVertical: 150,
+    paddingVertical: 30,
     borderRadius: 50,
     borderWidth: 4,
     borderColor: "#1F3C88",
@@ -748,7 +757,6 @@ const styles = StyleSheet.create({
   scanText: {
     fontSize: 100,
     color: "#1F3C88",
-    fontWeight: "100",
     letterSpacing: 1,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     textAlign: "center",
@@ -769,7 +777,6 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: 28,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -787,7 +794,6 @@ const styles = StyleSheet.create({
   },
   modalCloseText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 20,
   },
   modalContent: {
@@ -844,13 +850,11 @@ const styles = StyleSheet.create({
   },
   studentName: {
     fontSize: 20,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   studentParentLabel: {
     fontSize: 16,
-    fontWeight: "600",
     color: "#1F3C88",
     marginTop: 4,
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -865,7 +869,6 @@ const styles = StyleSheet.create({
   },
   removeButtonText: {
     color: "#fff",
-    fontWeight: "bold",
     fontSize: 18,
   },
   buttonRow: {
@@ -888,7 +891,6 @@ const styles = StyleSheet.create({
   },
   uploadCsvText: {
     color: "#1F3C88",
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   primaryButton: {
@@ -904,29 +906,28 @@ const styles = StyleSheet.create({
   },
   primaryButtonText: {
     color: "#fff",
-    fontWeight: "bold",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     fontSize: 18,
   },
   rowLayout: {
     flexDirection: "row",
     flex: 1,
-    borderWidth: 4,
     width: "100%",
   },
 
   leftList: {
+    flex: 1,
     width: "25%",
     backgroundColor: "#F2E9E4",
     borderRightWidth: 4,
-    borderColor: "#1F3C88",
-    padding: 20,
+    borderColor: "#101010ff",
+    paddingVertical: 30,
+    paddingHorizontal: 20,
     justifyContent: "flex-start",
   },
 
   listTitle: {
     fontSize: 26,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
     marginBottom: 20,
@@ -948,7 +949,6 @@ const styles = StyleSheet.create({
 
   listName: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -968,6 +968,7 @@ const styles = StyleSheet.create({
   },
 
   rightContent: {
+    flex: 3,
     width: "75%",
     alignItems: "center",
     justifyContent: "center",
@@ -975,16 +976,14 @@ const styles = StyleSheet.create({
     position: "relative",
   },
   infoTitle: {
+    fontFamily: "DynaPuff_500Medium", // or Dancing Script / Great Vibes
     fontSize: 28,
-    fontWeight: "bold",
     color: "#1F3C88",
     marginBottom: 20,
-    fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoLabel: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -1004,7 +1003,6 @@ const styles = StyleSheet.create({
 
   statusText: {
     fontSize: 14,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -1035,7 +1033,6 @@ const styles = StyleSheet.create({
     borderColor: "#1F3C88",
   },
   miniCardName: {
-    fontWeight: "bold",
     fontSize: 20,
     color: "#3B185F",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -1048,7 +1045,6 @@ const styles = StyleSheet.create({
   },
   text: {
     fontSize: 18,
-    fontWeight: "bold",
     color: "#fff",
     textAlign: "center",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
@@ -1068,7 +1064,6 @@ const styles = StyleSheet.create({
 
   totalCountText: {
     fontSize: 20,
-    fontWeight: "bold",
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
