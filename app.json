@@ -11,9 +11,7 @@
       "resizeMode": "contain",
       "backgroundColor": "#f0f9ff"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "com.kumonpunggolplaza.kumi"
@@ -24,12 +22,10 @@
         "foregroundImage": "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logoarm.png",
         "backgroundColor": "#f0f9ff"
       },
-      "permissions": [
-        "android.permission.CAMERA"
-      ]
+      "permissions": ["android.permission.CAMERA"]
     },
     "web": {
-      "favicon": "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/kumon/logoarm.png"
+      "favicon": "https://nlsggkzpooovjifqcbig.supabassets/kumi-logo.png"
     },
     "experiments": {
       "reactCanary": true
@@ -58,9 +54,7 @@
       ],
       "expo-av",
       "expo-build-properties",
-      "expo-font",
-      "expo-asset",
-      "expo-audio"
+      "expo-font"
     ],
     "extra": {
       "EXPO_PUBLIC_API_BASE": "http://46.62.157.49/",

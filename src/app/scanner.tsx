@@ -177,8 +177,10 @@ const QRScanner: React.FC = () => {
         toValue: 0,
         duration: 500,
         useNativeDriver: true,
-      }).start(() => setAnimationText(null));
-    }, 1000);
+      }).start(() => {
+        setAnimationText(null);
+      });
+    }, 500);
   };
 
   // const sendWhatsappMessage = async (name: string) => {
@@ -223,10 +225,13 @@ const QRScanner: React.FC = () => {
     if (error) {
       Alert.alert("Error", error);
     }
+
+    router.push("/");
   };
 
   const handleCheckIn = async (name: string) => {
     showFullScreenAnimation(`Welcome, ${name}!`);
+
     const {
       data: { session },
     } = await supabase.auth.getSession();
@@ -237,6 +242,7 @@ const QRScanner: React.FC = () => {
     if (error) {
       Alert.alert("Error", error);
     }
+    router.push("/");
   };
 
   const handleBarCodeScanned = async ({ data }) => {
@@ -270,8 +276,6 @@ const QRScanner: React.FC = () => {
         accessToken
       );
 
-      console.log("STATUS:", status);
-
       if (!status.found) {
         return handleCheckIn(name);
       }
@@ -297,11 +301,6 @@ const QRScanner: React.FC = () => {
     } catch (error) {
       console.error("error:", error);
       Alert.alert("Invalid QR Code", "Unable to process the QR code.");
-    } finally {
-      // Wait 2 seconds before re-enabling scanning
-      setTimeout(() => {
-        setScanned(false);
-      }, 7000);
     }
   };
 
@@ -341,7 +340,7 @@ const QRScanner: React.FC = () => {
               },
             ]}
           >
-            <Text style={styles.animationText}>{animationText}</Text>
+            <BouncyText text={animationText} />
           </Animated.View>
         )}
 
@@ -395,6 +394,57 @@ const QRScanner: React.FC = () => {
       </View>
     );
   }
+};
+
+const BouncyText: React.FC<{ text: string }> = ({ text }) => {
+  const letters = text.split("");
+  const animations = letters.map(() => new Animated.Value(0));
+
+  useEffect(() => {
+    Animated.stagger(
+      10, // delay per letter
+      animations.map((anim) =>
+        Animated.spring(anim, {
+          toValue: 1,
+          friction: 4,
+          tension: 70,
+          useNativeDriver: true,
+        })
+      )
+    ).start();
+  }, []);
+
+  return (
+    <View style={{ flexDirection: "row" }}>
+      {letters.map((letter, i) => (
+        <Animated.Text
+          key={i}
+          style={[
+            styles.animationText,
+            {
+              transform: [
+                {
+                  translateY: animations[i].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [40, 0], // drop-in bounce
+                  }),
+                },
+                {
+                  scale: animations[i].interpolate({
+                    inputRange: [0, 1],
+                    outputRange: [0.3, 1], // bounce pop
+                  }),
+                },
+              ],
+              opacity: animations[i],
+            },
+          ]}
+        >
+          {letter}
+        </Animated.Text>
+      ))}
+    </View>
+  );
 };
 
 const styles = StyleSheet.create({
@@ -465,7 +515,7 @@ const styles = StyleSheet.create({
   },
   animationText: {
     color: "white",
-    fontSize: 48,
+    fontSize: 100,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.4)",
     textShadowOffset: { width: 2, height: 2 },

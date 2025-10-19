@@ -1,5 +1,6 @@
 //mac http://192.168.1.127:4000
 //http://192.168.0.203:4000/
+//http://46.62.157.49/
 import { useFonts } from "@expo-google-fonts/dynapuff/useFonts";
 import { DynaPuff_400Regular } from "@expo-google-fonts/dynapuff/400Regular";
 import { DynaPuff_500Medium } from "@expo-google-fonts/dynapuff/500Medium";
@@ -194,6 +195,21 @@ export default function HomeScreen() {
 
   const notificationIdRef = useRef(0);
 
+  const showSendingNotification = (studentName: string) => {
+    const id = notificationIdRef.current++;
+    const message = `Sending to ${studentName}'s parents...`;
+
+    setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+    setTimeout(() => {
+      setSuccessNotifications((prev) =>
+        prev.filter((notif) => notif.id !== id)
+      );
+    }, 3000);
+
+    return id; // return the id so we can remove/replace it later
+  };
+
   const showSuccessNotification = (studentName: string, result: boolean) => {
     const id = notificationIdRef.current++; // persist ID between renders
     const message =
@@ -327,9 +343,7 @@ export default function HomeScreen() {
     return null;
   } else {
     return (
-      <View
-        style={[styles.container, { flex: 1, paddingTop: 0, paddingBottom: 0 }]}
-      >
+      <SafeAreaView style={[styles.container]}>
         <View style={styles.rowLayout}>
           <View style={styles.leftList}>
             <Text style={styles.infoTitle}>Student List</Text>
@@ -400,9 +414,12 @@ export default function HomeScreen() {
                             { marginTop: 10, paddingVertical: 8 },
                           ]}
                           onPress={async () => {
+                            showSendingNotification(entry.student_name);
+
                             const result = await sendWhatsappMessage(
                               entry.student_name
                             );
+
                             if (result) {
                               showSuccessNotification(
                                 entry.student_name,
@@ -666,7 +683,7 @@ export default function HomeScreen() {
             </Animated.View>
           ))}
         </View>
-      </View>
+      </SafeAreaView>
     );
   }
 }
@@ -920,7 +937,9 @@ const styles = StyleSheet.create({
     width: "25%",
     backgroundColor: "#F2E9E4",
     borderRightWidth: 4,
-    borderColor: "#101010ff",
+    borderTopWidth: 4,
+    borderBottomWidth: 4,
+    borderColor: "#1F3C88",
     paddingVertical: 30,
     paddingHorizontal: 20,
     justifyContent: "flex-start",
@@ -1068,3 +1087,4 @@ const styles = StyleSheet.create({
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 });
+

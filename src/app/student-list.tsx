@@ -282,6 +282,21 @@ export default function StudentListScreen() {
 
   const notificationIdRef = useRef(0);
 
+  const showSendingNotification = (studentName: string) => {
+    const id = notificationIdRef.current++;
+    const message = `Sending to ${studentName}'s parents...`;
+
+    setSuccessNotifications((prev) => [...prev, { id, message }]);
+
+    setTimeout(() => {
+      setSuccessNotifications((prev) =>
+        prev.filter((notif) => notif.id !== id)
+      );
+    }, 3000);
+
+    return id; // return the id so we can remove/replace it later
+  };
+
   const showSuccessNotification = (studentName: string, result: boolean) => {
     const id = notificationIdRef.current++; // persist ID between renders
     const message =
@@ -397,9 +412,12 @@ export default function StudentListScreen() {
                             { marginTop: 10, paddingVertical: 8 },
                           ]}
                           onPress={async () => {
+                            showSendingNotification(entry.student_name);
+
                             const result = await sendWhatsappMessage(
                               entry.student_name
                             );
+
                             if (result) {
                               showSuccessNotification(
                                 entry.student_name,
@@ -819,7 +837,6 @@ const styles = StyleSheet.create({
     width: "100%",
     height: "100%",
     padding: 18,
-    gap: 8,
     backgroundColor: "#FFF5E4",
   },
 
