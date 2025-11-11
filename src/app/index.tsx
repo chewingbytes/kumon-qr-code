@@ -484,12 +484,15 @@ export default function HomeScreen() {
             </TouchableOpacity>
             {dropdownVisible && (
               <View style={styles.dropdownMenu}>
+                <Pressable onPress={() => router.push("/student-list")}>
+                  <Text style={styles.dropdownItem}>Student List</Text>
+                </Pressable>
                 <Pressable onPress={() => router.push("/profile")}>
                   <Text style={styles.dropdownItem}>My Profile</Text>
                 </Pressable>
-                <Pressable onPress={() => router.push("/my-students")}>
+                {/* <Pressable onPress={() => router.push("/my-students")}>
                   <Text style={styles.dropdownItem}>My Students</Text>
-                </Pressable>
+                </Pressable> */}
                 <Pressable
                   onPress={() => {
                     setModalVisible(true);
@@ -604,46 +607,6 @@ export default function HomeScreen() {
                 </ScrollView>
               </SafeAreaView>
             </Modal>
-
-            {dropdownVisible && (
-              <View style={styles.dropdownMenu}>
-                <Pressable onPress={() => router.push("/student-list")}>
-                  <Text style={styles.dropdownItem}>Student List</Text>
-                </Pressable>
-                <Pressable onPress={() => router.push("/profile")}>
-                  <Text style={styles.dropdownItem}>My Profile</Text>
-                </Pressable>
-                <Pressable onPress={() => router.push("/my-students")}>
-                  <Text style={styles.dropdownItem}>My Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    setModalVisible(true);
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Add Students</Text>
-                </Pressable>
-                <Pressable
-                  onPress={() => {
-                    Alert.alert(
-                      "Are you sure?",
-                      "This will finish the day and email the attendance Excel report.",
-                      [
-                        { text: "Cancel", style: "cancel" },
-                        {
-                          text: "Yes, proceed",
-                          onPress: () => finishDay(),
-                        },
-                      ]
-                    );
-                    setDropdownVisible(false);
-                  }}
-                >
-                  <Text style={styles.dropdownItem}>Finish the Day</Text>
-                </Pressable>
-              </View>
-            )}
           </View>
         </View>
         <View
@@ -1087,4 +1050,3 @@ const styles = StyleSheet.create({
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 });
-

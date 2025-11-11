@@ -34,13 +34,13 @@ export default function MyStudentsScreen() {
       const res = await fetch(API + "api/db/all-students", {
         method: "GET",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${accessToken}`,
         },
       });
 
       const json = await res.json();
       if (json.error) throw new Error(json.error);
+
       setStudentsDashboard(json.students || []);
     } catch (error) {
       console.error("Error fetching students:", error.message);
@@ -89,7 +89,7 @@ export default function MyStudentsScreen() {
               onChangeText={setSearchQuery}
             />
 
-            {studentsDashboard.length === 0 ? (
+            {studentsDashboard && studentsDashboard.length === 0 ? (
               <View
                 style={{
                   flex: 1,
@@ -106,7 +106,7 @@ export default function MyStudentsScreen() {
                     width: 200,
                     height: 200,
                     marginBottom: 20,
-                    borderRadius: "999px",
+                    borderRadius: 99,
                   }}
                   resizeMode="contain"
                 />
@@ -130,9 +130,7 @@ export default function MyStudentsScreen() {
                     elevation: 3,
                   }}
                 >
-                  <Text
-                    style={{ color: "#fff", fontSize: 16 }}
-                  >
+                  <Text style={{ color: "#fff", fontSize: 16 }}>
                     Go to Dashboard
                   </Text>
                 </TouchableOpacity>
@@ -279,7 +277,10 @@ const styles = StyleSheet.create({
   },
 
   // Student List
-  studentList: { marginTop: 10, maxHeight: Dimensions.get("window").height * 0.6 },
+  studentList: {
+    marginTop: 10,
+    maxHeight: Dimensions.get("window").height * 0.6,
+  },
   studentCard: {
     backgroundColor: "#ADC5CE",
     padding: 18,
