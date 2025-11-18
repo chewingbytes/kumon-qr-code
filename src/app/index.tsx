@@ -354,16 +354,14 @@ export default function HomeScreen() {
               style={styles.input}
               placeholderTextColor="#888"
             />
-            <ScrollView contentContainerStyle={{ paddingBottom: 20 }}>
+            <ScrollView
+              ref={dashboardScrollRef}
+              contentContainerStyle={{ paddingBottom: 20 }}
+            >
               {loading ? (
                 <Text style={styles.noDataText}>Refreshing...</Text>
               ) : studentsDashboard && studentsDashboard.length > 0 ? (
                 [...studentsDashboard] // copy array to avoid mutating state
-                  .sort(
-                    (a, b) =>
-                      new Date(b.checkin_time).getTime() -
-                      new Date(a.checkin_time).getTime()
-                  )
                   .filter((e) =>
                     e.student_name
                       ?.toLowerCase()
@@ -377,23 +375,29 @@ export default function HomeScreen() {
                         entry.status === "checked_in" ? styles.in : styles.out,
                       ]}
                     >
-                      {/* Student Name with tick */}
-                      <Text style={styles.miniCardName}>
-                        {entry.student_name}{" "}
-                        {entry.parent_notified && (
-                          <Text
-                            style={{
-                              marginLeft: 8,
-                              color: "green",
-                              fontSize: 18,
-                            }}
-                          >
-                            ✅
-                          </Text>
-                        )}
-                      </Text>
+                      <View
+                        style={{
+                          flexDirection: "row",
+                          justifyContent: "space-between",
+                          alignItems: "center",
+                        }}
+                      >
+                        <Text style={styles.miniCardName}>
+                          {entry.student_name}{" "}
+                          {entry.parent_notified && (
+                            <Text
+                              style={{
+                                marginLeft: 8,
+                                color: "green",
+                                fontSize: 18,
+                              }}
+                            >
+                              ✅
+                            </Text>
+                          )}
+                        </Text>
+                      </View>
 
-                      {/* Status */}
                       <Text
                         style={[
                           styles.statusText,
@@ -490,17 +494,25 @@ export default function HomeScreen() {
                 <Pressable onPress={() => router.push("/profile")}>
                   <Text style={styles.dropdownItem}>My Profile</Text>
                 </Pressable>
-                {/* <Pressable onPress={() => router.push("/my-students")}>
+                <Pressable onPress={() => router.push("/my-students")}>
                   <Text style={styles.dropdownItem}>My Students</Text>
-                </Pressable> */}
+                </Pressable>
                 <Pressable
+                  onPress={() => {
+                    router.push("/student-management");
+                    setDropdownVisible(false);
+                  }}
+                >
+                  <Text style={styles.dropdownItem}>Student Management</Text>
+                </Pressable>
+                {/* <Pressable
                   onPress={() => {
                     setModalVisible(true);
                     setDropdownVisible(false);
                   }}
                 >
                   <Text style={styles.dropdownItem}>Add Students</Text>
-                </Pressable>
+                </Pressable> */}
                 <Pressable
                   onPress={() => {
                     Alert.alert(
@@ -722,7 +734,7 @@ const styles = StyleSheet.create({
     textAlign: "center",
   },
   scanButton: {
-    marginTop: 50,
+    marginTop: 30,
     backgroundColor: "#F2E9E4",
     width: "90%",
     paddingVertical: 30,
@@ -1048,5 +1060,13 @@ const styles = StyleSheet.create({
     fontSize: 20,
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
+  },
+  dropdownOption: {
+    backgroundColor: "#fff",
+    borderWidth: 2,
+    borderColor: "#1F3C88",
+    borderRadius: 8,
+    paddingVertical: 8,
+    paddingHorizontal: 16,
   },
 });

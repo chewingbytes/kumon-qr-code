@@ -1,3 +1,4 @@
+import { Toaster } from 'sonner-native';
 import { useEffect, useState } from "react";
 import { Stack } from "expo-router";
 import { supabase } from "../../lib/supabase";
@@ -34,7 +35,11 @@ export default function Layout() {
   useEffect(() => {
     if (session === undefined) return; // wait for session check
 
-    const inAuthGroup = segments[0] === "login" || segments[0] === "signup" || segments[0] === "reset-password" || segments[0] === "forgot-password";
+    const inAuthGroup =
+      segments[0] === "login" ||
+      segments[0] === "signup" ||
+      segments[0] === "reset-password" ||
+      segments[0] === "forgot-password";
 
     if (!session && !inAuthGroup) {
       // Not logged in, redirect to login
@@ -50,10 +55,13 @@ export default function Layout() {
 
   // Otherwise render the stack (routes)
   return (
-    <Stack
-      screenOptions={{
-        headerShown: false, // 👈 this removes the top bar globally
-      }}
-    />
+    <>
+      <Toaster />
+      <Stack
+        screenOptions={{
+          headerShown: false, // 👈 this removes the top bar globally
+        }}
+      />
+    </>
   );
 }

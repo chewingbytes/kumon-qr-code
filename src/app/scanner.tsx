@@ -22,7 +22,7 @@ global.Buffer = global.Buffer || Buffer;
 import { supabase } from "../../lib/supabase";
 
 const audioSource = {
-  uri: "http://commondatastorage.googleapis.com/codeskulptor-assets/week7-brrring.m4a",
+  uri: "https://nlsggkzpooovjifqcbig.supabase.co/storage/v1/object/public/image_storage/dontdelete/ringwav.wav",
 };
 
 console.log("API:", API);
@@ -245,6 +245,28 @@ const QRScanner: React.FC = () => {
     router.push("/");
   };
 
+  const [showCheck, setShowCheck] = useState(false);
+  const checkAnim = useRef(new Animated.Value(0)).current;
+
+  const triggerCheckAnimation = () => {
+    setShowCheck(true);
+    checkAnim.setValue(0);
+
+    Animated.spring(checkAnim, {
+      toValue: 1,
+      friction: 5,
+      useNativeDriver: true,
+    }).start(() => {
+      setTimeout(() => {
+        Animated.timing(checkAnim, {
+          toValue: 0,
+          duration: 400,
+          useNativeDriver: true,
+        }).start(() => setShowCheck(false));
+      }, 600);
+    });
+  };
+
   const handleBarCodeScanned = async ({ data }) => {
     try {
       const timestamp = Date.now();
@@ -262,8 +284,7 @@ const QRScanner: React.FC = () => {
       player.seekTo(0);
       player.play();
 
-      setSuccessMessage(`Scanned: ${name}`);
-      setTimeout(() => setSuccessMessage(null), 5000);
+      triggerCheckAnimation();
 
       const {
         data: { session },
@@ -356,15 +377,18 @@ const QRScanner: React.FC = () => {
           />
 
           {/* ✅ Overlay UI */}
-          {successMessage && (
-            <View
+          {showCheck && (
+            <Animated.View
               style={[
-                styles.popup,
-                { position: "absolute", top: "70%", alignSelf: "center" },
+                styles.checkOverlay,
+                {
+                  opacity: checkAnim,
+                  transform: [{ scale: checkAnim }],
+                },
               ]}
             >
-              <Text style={styles.popupText}>{successMessage}</Text>
-            </View>
+              <Text style={styles.checkMark}>✓</Text>
+            </Animated.View>
           )}
 
           <TouchableOpacity
@@ -415,7 +439,14 @@ const BouncyText: React.FC<{ text: string }> = ({ text }) => {
   }, []);
 
   return (
-    <View style={{ flexDirection: "row" }}>
+    <View
+      style={{
+        flexDirection: "row",
+        flexWrap: "wrap", // allow letters to wrap to next line
+        justifyContent: "center", // center text
+        maxWidth: "90%", // keep it inside the screen
+      }}
+    >
       {letters.map((letter, i) => (
         <Animated.Text
           key={i}
@@ -518,6 +549,27 @@ const styles = StyleSheet.create({
     fontSize: 100,
     textAlign: "center",
     textShadowColor: "rgba(0,0,0,0.4)",
+    textShadowOffset: { width: 2, height: 2 },
+    textShadowRadius: 5,
+  },
+  checkOverlay: {
+    position: "absolute",
+    top: "50%",
+    left: "50%",
+    transform: [{ translateX: -50 }, { translateY: -50 }],
+    backgroundColor: "rgba(0, 255, 127, 0.25)",
+    borderRadius: 100,
+    width: 160,
+    height: 160,
+    justifyContent: "center",
+    alignItems: "center",
+    zIndex: 1000,
+  },
+  checkMark: {
+    fontSize: 150,
+    color: "#00FF7F",
+    fontWeight: "800",
+    textShadowColor: "rgba(0,0,0,0.3)",
     textShadowOffset: { width: 2, height: 2 },
     textShadowRadius: 5,
   },

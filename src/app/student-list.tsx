@@ -27,22 +27,58 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function StudentListScreen() {
-  const [modalVisible, setModalVisible] = useState(false);
-  const [dropdownVisible, setDropdownVisible] = useState(false);
-  const [studentName, setStudentName] = useState("");
-  const [parentNumber, setParentNumber] = useState("");
   const [studentsDashboard, setStudentsDashboard] = useState([]);
   const [searchQuery, setSearchQuery] = useState("");
-  const [students, setStudents] = useState([]);
-  const [uploading, setUploading] = useState(false);
-  const [pickedCSV, setPickedCSV] = useState(null);
-  const [csvFileName, setCsvFileName] = useState(null);
   const [selectedStudent, setSelectedStudent] = useState(null);
   const [manualSelect, setManualSelect] = useState(false); // track if user clicked
+  const [menuOpen, setMenuOpen] = useState(false);
 
   const [successNotifications, setSuccessNotifications] = useState<
     { id: number; message: string }[]
   >([]);
+
+  const handleDeleteStudent = async (studentId: number) => {
+    try {
+      const {
+        data: { session },
+      } = await supabase.auth.getSession();
+      const accessToken = session?.access_token;
+
+      Alert.alert(
+        "Delete Record",
+        "Are you sure you want to delete this record?",
+        [
+          { text: "Cancel", style: "cancel" },
+          {
+            text: "Delete",
+            style: "destructive",
+            onPress: async () => {
+              const res = await fetch(API + `api/db/${studentId}`, {
+                method: "DELETE",
+                headers: {
+                  Authorization: `Bearer ${accessToken}`,
+                  "Content-Type": "application/json",
+                },
+              });
+              const json = await res.json();
+              if (json.error) throw new Error(json.error);
+
+              console.log("JSON:", json);
+
+              Alert.alert(
+                "Deleted",
+                json.message || "Student deleted successfully!"
+              );
+              setSelectedStudent(null);
+              fetchStudents();
+            },
+          },
+        ]
+      );
+    } catch (err) {
+      Alert.alert("Error", err.message);
+    }
+  };
 
   const sendWhatsappMessage = async (name: string) => {
     try {
@@ -83,77 +119,6 @@ export default function StudentListScreen() {
       console.log("STUDENTSDAHSBORD:", studentsDashboard);
     }
   }, [studentsDashboard, manualSelect]);
-
-  const handlePickCSV = async () => {
-    try {
-      const result = await DocumentPicker.getDocumentAsync({
-        type: Platform.OS === "android" ? "*/*" : "text/csv",
-        copyToCacheDirectory: true,
-      });
-
-      if (
-        result.canceled === false &&
-        result.assets &&
-        result.assets.length > 0
-      ) {
-        const fileAsset = result.assets[0];
-
-        const file = {
-          uri: fileAsset.uri,
-          name: fileAsset.name,
-          type: fileAsset.mimeType || "text/csv",
-        };
-
-        setPickedCSV(file); // Set your local file state
-        setCsvFileName(file.name); // Optional: for display
-      }
-    } catch (err) {
-      Alert.alert("Pick Error", err.message);
-    }
-  };
-
-  const uploadPickedCSV = async () => {
-    if (!pickedCSV)
-      return Alert.alert("No file", "Please pick a CSV file first.");
-
-    setUploading(true);
-
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const accessToken = session?.access_token;
-
-      const formData = new FormData();
-      // @ts-ignore
-      formData.append("file", pickedCSV);
-
-      const response = await fetch(API + "api/db/upload-csv", {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: formData,
-      });
-
-      const json = await response.json();
-      setUploading(false);
-      setPickedCSV(null);
-      setCsvFileName(null);
-
-      if (json.error) {
-        Alert.alert("Upload Error", json.error);
-      } else {
-        Alert.alert("Success", "CSV uploaded and processed!");
-        fetchStudents();
-        setModalVisible(false);
-      }
-    } catch (err) {
-      setUploading(false);
-      Alert.alert("Error", err.message);
-    }
-  };
 
   const postJSONWithBody = async (
     path: string,
@@ -208,70 +173,6 @@ export default function StudentListScreen() {
     } catch (error) {
       console.error("Error fetching students:", error.message);
     }
-  };
-
-  const startScan = () => router.push("scanner");
-
-  const addStudent = () => {
-    const name = studentName.trim();
-    const number = parentNumber.trim();
-
-    if (!name || !number) {
-      return Alert.alert("Missing Fields", "Please fill all fields.");
-    }
-
-    const phoneRegex = /^\d{8}$/; // exactly 8 digits
-    if (!phoneRegex.test(parentNumber)) {
-      return Alert.alert(
-        "Invalid Number",
-        "Please enter a valid 8-digit Singapore phone number."
-      );
-    }
-
-    setStudents((prev) => [...prev, { name: studentName, parentNumber }]);
-    setStudentName("");
-    setParentNumber("");
-  };
-
-  const submitStudents = async () => {
-    if (!students.length) return Alert.alert("No students to submit");
-    try {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-
-      const accessToken = session?.access_token;
-
-      const res = await fetch(API + "api/db/students", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${accessToken}`,
-        },
-        body: JSON.stringify({ students }),
-      });
-      const json = await res.json();
-      if (json.error) throw new Error(json.error);
-
-      Alert.alert("Success", json.message || "All students added.");
-      setStudents([]);
-      setModalVisible(false);
-      fetchStudents();
-    } catch (err) {
-      Alert.alert("Error", err.message);
-    }
-  };
-
-  const finishDay = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
-
-    const accessToken = session?.access_token;
-    const res = await postJSON("api/db/finish-day", accessToken);
-    if (res?.error) Alert.alert("Error", res.error);
-    else Alert.alert("Done", "Day finished and report sent.");
-    setDropdownVisible(false);
   };
 
   useFocusEffect(
@@ -358,11 +259,6 @@ export default function StudentListScreen() {
             >
               {studentsDashboard && studentsDashboard.length > 0 ? (
                 [...studentsDashboard]
-                  .sort(
-                    (a, b) =>
-                      new Date(b.checkin_time).getTime() -
-                      new Date(a.checkin_time).getTime()
-                  )
                   .filter((e) =>
                     e.student_name
                       ?.toLowerCase()
@@ -381,29 +277,67 @@ export default function StudentListScreen() {
                       }}
                     >
                       <View>
-                        <Text
-                          style={[
-                            styles.cardTitle,
-                            selectedStudent?.id === entry.id &&
-                              styles.selectedUnderline,
-                          ]}
-                        >
-                          {entry.student_name}{" "}
-                        </Text>
+                        <View>
+                          <Text
+                            style={[
+                              styles.cardTitle,
+                              selectedStudent?.id === entry.id &&
+                                styles.selectedUnderline,
+                            ]}
+                          >
+                            {entry.student_name}{" "}
+                          </Text>
 
-                        <Text
-                          style={[
-                            styles.statusText,
-                            entry.status === "checked_in"
-                              ? styles.checkedIn
-                              : styles.checkedOut,
-                          ]}
-                        >
-                          {entry.status === "checked_in"
-                            ? "Checked In"
-                            : "Checked Out"}
-                        </Text>
+                          <Text
+                            style={[
+                              styles.statusText,
+                              entry.status === "checked_in"
+                                ? styles.checkedIn
+                                : styles.checkedOut,
+                            ]}
+                          >
+                            {entry.status === "checked_in"
+                              ? "Checked In"
+                              : "Checked Out"}
+                          </Text>
+                        </View>
                       </View>
+
+                      {selectedStudent === entry.id && (
+                        <View
+                          style={{
+                            position: "absolute",
+                            top: 45,
+                            right: 15,
+                            backgroundColor: "#fff",
+                            borderColor: "#1F3C88",
+                            borderWidth: 3,
+                            borderRadius: 8,
+                            zIndex: 1000,
+                          }}
+                        >
+                          <Pressable
+                            onPress={() => {
+                              setSelectedStudent(null);
+                              handleDeleteStudent(entry.student_id);
+                            }}
+                            style={{
+                              padding: 10,
+                              borderRadius: 4,
+                              backgroundColor: "#B00020",
+                            }}
+                          >
+                            <Text
+                              style={{
+                                color: "#fff0f0",
+                                fontFamily: "DynaPuff_400Regular",
+                              }}
+                            >
+                              Delete Record
+                            </Text>
+                          </Pressable>
+                        </View>
+                      )}
 
                       {entry.status === "checked_out" ? (
                         <TouchableOpacity
@@ -457,6 +391,56 @@ export default function StudentListScreen() {
           <View style={styles.rightPanel}>
             {selectedStudent ? (
               <View style={[styles.infoCard, { flex: 1 }]}>
+                {/* Hamburger Menu */}
+                <Pressable
+                  onPress={() => setMenuOpen(!menuOpen)}
+                  style={{
+                    position: "absolute",
+                    top: 15,
+                    right: 15,
+                    zIndex: 10,
+                  }}
+                >
+                  <Text style={{ fontSize: 28, color: "#1F3C88" }}>≡</Text>
+                </Pressable>
+
+                {menuOpen && (
+                  <View
+                    style={{
+                      position: "absolute",
+                      top: 55,
+                      right: 15,
+                      backgroundColor: "#fff",
+                      borderColor: "#1F3C88",
+                      borderWidth: 3,
+                      borderRadius: 8,
+                      zIndex: 1000,
+                    }}
+                  >
+                    <Pressable
+                      onPress={() => {
+                        setMenuOpen(false);
+                        handleDeleteStudent(selectedStudent.student_id);
+                      }}
+                      style={{
+                        padding: 15,
+                        borderRadius: 4,
+                        backgroundColor: "#B00020",
+                      }}
+                    >
+                      <Text
+                        style={{
+                          color: "#fff0f0",
+                          fontFamily: "DynaPuff_400Regular",
+                          fontSize: 20,
+                        }}
+                      >
+                        Delete Record
+                      </Text>
+                    </Pressable>
+                  </View>
+                )}
+
                 <Text style={styles.infoTitle}>Info Card</Text>
 
                 <View style={styles.infoSection}>
@@ -638,8 +622,8 @@ const styles = StyleSheet.create({
     borderWidth: 3,
     shadowColor: "#000",
     shadowOffset: { width: 4, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 4,
+    shadowOpacity: 0.2,
+    shadowRadius: 7,
   },
 
   in: {
@@ -848,13 +832,13 @@ const styles = StyleSheet.create({
   },
 
   infoLabel: {
-    fontSize: 15,
+    fontSize: 10,
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
 
   infoValue: {
-    fontSize: 30,
+    fontSize: 20,
     color: "#1F3C88",
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
@@ -923,8 +907,8 @@ const styles = StyleSheet.create({
     fontFamily: "DynaPuff_400Regular", // or Dancing Script / Great Vibes
   },
   infoSection: {
-    borderBottomWidth: 2,
+    borderBottomWidth: 1,
     borderColor: "#1F3C88",
-    paddingVertical: 5,
+    paddingTop: 20,
   },
 });

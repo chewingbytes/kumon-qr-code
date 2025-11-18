@@ -54,10 +54,16 @@
       ],
       "expo-av",
       "expo-build-properties",
-      "expo-font"
+      "expo-font",
+      [
+        "expo-audio",
+        {
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone."
+        }
+      ]
     ],
     "extra": {
-      "EXPO_PUBLIC_API_BASE": "http://46.62.157.49/",
+      "EXPO_PUBLIC_API_BASE": "http://localhost:8080/",
       "eas": {
         "projectId": "ac98a74c-03e4-4dee-9e04-acbdf735e2a7"
       }
